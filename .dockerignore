@@ -1,0 +1,65 @@
+# Ignore stateful content (these will be generated again)
+db/
+log/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+env/
+venv/
+.venv/
+.Python
+
+# Environment and secrets
+.env
+!.sample.env
+secrets.*
+*.key
+*.pem
+
+# SQLite, DuckDB and runtime files
+*.sqlite
+*.sqlite3
+*.db
+*.duckdb
+*.log
+*.sock
+
+# Version control
+.git/
+.gitignore
+
+# Docker and CI/CD
+Dockerfile
+docker-compose.yml
+.docker/
+.dockerignore
+
+# IDE config
+.vscode/
+.idea/
+
+# Frontend development files (dist is INCLUDED - pre-built for community)
+frontend/node_modules/
+frontend/.vite/
+frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+frontend/*.tsbuildinfo
+
+# Frontend test files (not needed in production)
+frontend/e2e/
+frontend/src/test/
+frontend/vitest.config.ts
+frontend/playwright.config.ts
+
+# Frontend docs (developer reference, not needed in production)
+frontend/docs/
+
+# Project docs (EXPLICITLY INCLUDED)
+!docs/
+!frontend/dist/

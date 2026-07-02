@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TriexDev Options Backtest Report (2022-Latest)</title>
+    <meta name="description" content="Visual performance report for TriexDev - SuperBuySellStrategy Options Backtest (2022-Latest).">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #080b13;
+            --card-bg: rgba(16, 22, 38, 0.7);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.15);
+            --secondary: #3b82f6;
+            --secondary-glow: rgba(59, 130, 246, 0.15);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.15);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 2.5rem 1.5rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .logo-title h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+        
+        .logo-title p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        
+        .timestamp {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.03);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            backdrop-filter: blur(16px);
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            position: relative;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        
+        .card-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+        
+        .card-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        
+        .value-green {
+            color: var(--primary);
+            text-shadow: 0 0 16px var(--primary-glow);
+        }
+        
+        .value-red {
+            color: var(--red);
+            text-shadow: 0 0 16px var(--red-glow);
+        }
+        
+        .grid-2-1 {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 960px) {
+            .grid-2-1 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        
+        .chart-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .chart-container {
+            height: 380px;
+            position: relative;
+            width: 100%;
+        }
+        
+        .reason-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.85rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        
+        .reason-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .reason-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .reason-label::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+        }
+        
+        .reason-row:nth-child(1) .reason-label::before { background-color: #ef4444; }
+        .reason-row:nth-child(2) .reason-label::before { background-color: #10b981; }
+        .reason-row:nth-child(3) .reason-label::before { background-color: #fbbf24; }
+        .reason-row:nth-child(4) .reason-label::before { background-color: #3b82f6; }
+        
+        .reason-value {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        
+        .ratio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.25rem;
+        }
+        
+        .ratio-item {
+            display: flex;
+            flex-direction: column;
+            border-left: 3px solid var(--secondary);
+            padding-left: 1rem;
+            background: rgba(255,255,255,0.01);
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .ratio-item.green {
+            border-left-color: var(--primary);
+        }
+        
+        .ratio-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .ratio-val {
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-title">
+                <h1>TriexDev - Strategy Dashboard</h1>
+                <p>Performance analytics report for Simulated Nifty Option Premium (2022-Latest)</p>
+            </div>
+            <div class="timestamp">
+                Report Generated: 2026-06-15 13:18:54
+            </div>
+        </header>
+        
+        <!-- Key Metrics Row -->
+        <div class="grid-4">
+            <div class="card">
+                <div class="card-title">Net Capital P&L (Rs)</div>
+                <div class="card-value value-green">
+                    +Rs 156,322.12
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Net Return (%)</div>
+                <div class="card-value value-green">
+                    +312.64%
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Win Rate</div>
+                <div class="card-value" style="color: #60a5fa; text-shadow: 0 0 16px rgba(96, 165, 250, 0.15);">
+                    48.37%
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Profit Factor</div>
+                <div class="card-value" style="color: #fbbf24; text-shadow: 0 0 16px rgba(251, 191, 36, 0.15);">
+                    1.69
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart & Stats Section -->
+        <div class="grid-2-1">
+            <div class="card">
+                <div class="chart-header">
+                    <h2>Account Equity Curve (Rs, Net of Costs)</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="equityChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="chart-header">
+                    <h2>Trade Exits Analysis</h2>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <div class="reason-row"><span class="reason-label">Intraday Squareoff</span><span class="reason-value">83</span></div><div class="reason-row"><span class="reason-label">Reversal</span><span class="reason-value">77</span></div><div class="reason-row"><span class="reason-label">SL</span><span class="reason-value">59</span></div><div class="reason-row"><span class="reason-label">TP</span><span class="reason-value">27</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Metrics Card -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div class="chart-header" style="margin-bottom: 0.5rem;">
+                <h2>Advanced Risk-Adjusted & Streak Ratios (Net of Costs)</h2>
+            </div>
+            <div class="ratio-grid">
+                <div class="ratio-item green">
+                    <span class="ratio-label">Sharpe Ratio</span>
+                    <span class="ratio-val" style="color: var(--primary);">3.56</span>
+                </div>
+                <div class="ratio-item green">
+                    <span class="ratio-label">Sortino Ratio</span>
+                    <span class="ratio-val" style="color: var(--primary);">12.36</span>
+                </div>
+                <div class="ratio-item">
+                    <span class="ratio-label">Calmar Ratio</span>
+                    <span class="ratio-val" style="color: #fbbf24;">24.85</span>
+                </div>
+                <div class="ratio-item" style="border-left-color: var(--red);">
+                    <span class="ratio-label">Max Drawdown</span>
+                    <span class="ratio-val" style="color: var(--red);">Rs 22,651.72 (12.58%)</span>
+                </div>
+                <div class="ratio-item">
+                    <span class="ratio-label">Max Drawdown Days</span>
+                    <span class="ratio-val" style="color: var(--red);">271.0 Days</span>
+                </div>
+                <div class="ratio-item">
+                    <span class="ratio-label">Max Winning Streak</span>
+                    <span class="ratio-val" style="color: var(--primary);">5 Trades</span>
+                </div>
+                <div class="ratio-item">
+                    <span class="ratio-label">Max Losing Streak</span>
+                    <span class="ratio-val" style="color: var(--red);">7 Trades</span>
+                </div>
+                <div class="ratio-item">
+                    <span class="ratio-label">Average Net P&L</span>
+                    <span class="ratio-val">Rs 635.46</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monthly Returns Grid Matrix -->
+        <div class="card" style="margin-bottom: 2rem; overflow-x: auto;">
+            <div class="chart-header">
+                <h2>Monthly Net Profit/Loss (Rupees, Net of Costs)</h2>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: center;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <th style="padding: 0.75rem; text-align: left; color: var(--text-muted);">Year</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Jan</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Feb</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Mar</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Apr</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">May</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Jun</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Jul</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Aug</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Sep</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Oct</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Nov</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted);">Dec</th>
+                        <th style="padding: 0.75rem; color: var(--text-muted); font-weight: 700;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+            <td style="padding: 0.75rem; text-align: left; font-weight: 700; color: #60a5fa;">2022</td>
+            <td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 19,913</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 7,641</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 11,856</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 3,548</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 5,599</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 2,866</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 8,385</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 96</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 8,287</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 2,841</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 982</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 11,105</td>
+            <td class="value-green" style="padding: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.015);">
+                +Rs 55,155
+            </td>
+        </tr>
+        
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+            <td style="padding: 0.75rem; text-align: left; font-weight: 700; color: #60a5fa;">2023</td>
+            <td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 13,778</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 5,787</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 3,988</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 4,100</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 2,526</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 1,153</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 3,504</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 542</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 4,934</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 1,792</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 1,374</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 11,839</td>
+            <td class="value-green" style="padding: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.015);">
+                +Rs 43,291
+            </td>
+        </tr>
+        
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+            <td style="padding: 0.75rem; text-align: left; font-weight: 700; color: #60a5fa;">2024</td>
+            <td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 5,511</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 1,330</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 96</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 14,229</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 532</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 11,502</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 779</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 1,764</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 8,611</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 6</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 1,587</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 4,182</td>
+            <td class="value-green" style="padding: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.015);">
+                +Rs 20,924
+            </td>
+        </tr>
+        
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+            <td style="padding: 0.75rem; text-align: left; font-weight: 700; color: #60a5fa;">2025</td>
+            <td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 1,755</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 2,137</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 4,818</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 9,735</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 1,662</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 1,145</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 4,036</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 3,859</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 2,477</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 8,683</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 3,507</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 257</td>
+            <td class="value-red" style="padding: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.015);">
+                -Rs 5,146
+            </td>
+        </tr>
+        
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+            <td style="padding: 0.75rem; text-align: left; font-weight: 700; color: #60a5fa;">2026</td>
+            <td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 13,229</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 2,639</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 16,651</td><td class="value-green" style="padding: 0.75rem; font-weight: 500;">+Rs 10,261</td><td class="value-red" style="padding: 0.75rem; font-weight: 500;">-Rs 683</td><td style="padding: 0.75rem; color: var(--text-muted);">-</td><td style="padding: 0.75rem; color: var(--text-muted);">-</td><td style="padding: 0.75rem; color: var(--text-muted);">-</td><td style="padding: 0.75rem; color: var(--text-muted);">-</td><td style="padding: 0.75rem; color: var(--text-muted);">-</td><td style="padding: 0.75rem; color: var(--text-muted);">-</td><td style="padding: 0.75rem; color: var(--text-muted);">-</td>
+            <td class="value-green" style="padding: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.015);">
+                +Rs 42,098
+            </td>
+        </tr>
+        
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        const dates = ['2022-01-04 14:25', '2022-01-06 13:35', '2022-01-10 12:45', '2022-01-18 13:00', '2022-01-25 13:25', '2022-01-27 13:05', '2022-02-01 14:45', '2022-02-09 13:55', '2022-02-11 12:40', '2022-02-22 14:00', '2022-03-02 13:05', '2022-03-04 12:00', '2022-03-08 13:55', '2022-03-09 14:20', '2022-03-24 14:30', '2022-04-04 13:20', '2022-04-06 12:40', '2022-04-07 12:00', '2022-04-08 12:05', '2022-04-11 13:20', '2022-04-12 14:05', '2022-04-26 14:20', '2022-04-28 11:50', '2022-04-29 12:50', '2022-05-06 14:10', '2022-05-09 12:10', '2022-05-09 14:50', '2022-05-11 14:05', '2022-05-16 14:05', '2022-05-18 13:40', '2022-05-20 13:10', '2022-05-25 14:20', '2022-05-26 12:55', '2022-05-31 14:00', '2022-06-06 12:15', '2022-06-13 14:40', '2022-06-23 13:35', '2022-06-29 12:05', '2022-06-30 13:20', '2022-07-01 12:20', '2022-07-04 13:00', '2022-07-04 14:50', '2022-07-06 12:50', '2022-07-07 14:50', '2022-07-11 13:05', '2022-07-15 14:15', '2022-07-21 14:30', '2022-07-22 12:15', '2022-07-22 13:50', '2022-08-02 11:40', '2022-08-02 13:55', '2022-08-18 13:20', '2022-08-23 12:55', '2022-09-02 13:10', '2022-09-06 12:00', '2022-09-07 11:55', '2022-09-08 14:30', '2022-09-14 14:25', '2022-09-15 14:25', '2022-09-21 13:40', '2022-09-22 13:20', '2022-09-26 12:20', '2022-09-27 12:10', '2022-10-10 11:45', '2022-10-10 14:50', '2022-10-12 11:45', '2022-10-20 13:05', '2022-10-20 14:40', '2022-11-03 13:45', '2022-11-18 14:30', '2022-12-16 12:25', '2022-12-19 13:55', '2022-12-20 12:25', '2022-12-22 13:50', '2022-12-27 13:50', '2023-01-09 14:35', '2023-01-12 14:10', '2023-01-17 13:40', '2023-01-30 14:05', '2023-01-31 13:20', '2023-02-01 12:25', '2023-02-03 12:20', '2023-02-08 12:00', '2023-02-09 13:50', '2023-02-22 14:40', '2023-03-03 13:35', '2023-03-08 14:00', '2023-03-16 13:35', '2023-03-17 13:55', '2023-03-20 14:25', '2023-03-29 13:20', '2023-04-13 13:00', '2023-04-17 12:30', '2023-05-05 12:55', '2023-05-19 14:15', '2023-05-22 12:15', '2023-06-23 12:35', '2023-07-03 12:35', '2023-07-04 12:15', '2023-07-10 13:15', '2023-07-14 13:15', '2023-07-18 14:05', '2023-07-19 12:55', '2023-07-25 12:35', '2023-07-28 14:25', '2023-07-31 14:05', '2023-08-16 13:10', '2023-08-17 14:35', '2023-08-18 14:05', '2023-09-07 13:45', '2023-09-08 11:35', '2023-10-16 11:45', '2023-11-22 14:30', '2023-11-30 13:45', '2023-11-30 14:45', '2023-12-05 13:35', '2023-12-06 14:20', '2023-12-13 13:00', '2023-12-19 11:45', '2023-12-22 14:45', '2023-12-27 14:45', '2024-01-05 14:50', '2024-01-24 14:15', '2024-02-09 12:20', '2024-02-12 14:15', '2024-02-14 13:00', '2024-02-14 14:15', '2024-02-15 13:45', '2024-02-27 12:50', '2024-03-05 11:55', '2024-03-15 13:40', '2024-03-18 12:20', '2024-03-20 11:45', '2024-04-19 12:25', '2024-04-25 13:05', '2024-05-07 13:45', '2024-05-13 13:55', '2024-05-16 12:15', '2024-05-16 14:40', '2024-05-29 12:50', '2024-06-04 12:50', '2024-06-19 12:15', '2024-06-20 13:25', '2024-06-21 14:05', '2024-06-27 12:15', '2024-06-28 14:10', '2024-07-10 14:40', '2024-07-18 12:35', '2024-07-23 14:35', '2024-07-30 14:40', '2024-08-08 12:15', '2024-09-09 13:30', '2024-09-12 14:05', '2024-09-16 13:45', '2024-09-25 14:05', '2024-09-26 14:35', '2024-10-01 12:20', '2024-10-07 14:50', '2024-10-16 14:10', '2024-10-21 14:00', '2024-10-29 12:05', '2024-11-04 12:05', '2024-11-05 13:25', '2024-11-06 11:55', '2024-11-08 13:15', '2024-11-11 14:40', '2024-11-18 12:30', '2024-12-09 11:45', '2024-12-13 11:35', '2024-12-23 14:40', '2025-01-01 14:00', '2025-01-06 13:00', '2025-01-08 13:45', '2025-01-17 12:20', '2025-01-22 14:20', '2025-02-04 11:50', '2025-02-12 11:45', '2025-02-14 14:35', '2025-02-21 14:50', '2025-03-03 12:35', '2025-03-18 13:20', '2025-03-20 12:40', '2025-03-28 14:30', '2025-04-07 14:05', '2025-04-23 13:05', '2025-04-25 13:00', '2025-05-29 13:00', '2025-06-05 12:05', '2025-06-13 13:40', '2025-06-20 13:20', '2025-07-03 13:40', '2025-07-16 11:55', '2025-07-17 11:40', '2025-07-18 14:35', '2025-07-22 12:35', '2025-07-29 12:55', '2025-08-06 12:30', '2025-08-11 12:55', '2025-08-12 12:25', '2025-08-18 13:10', '2025-08-29 11:35', '2025-09-03 12:15', '2025-09-23 12:30', '2025-09-29 13:15', '2025-10-03 14:40', '2025-10-07 13:10', '2025-10-08 13:00', '2025-10-14 14:35', '2025-10-28 12:45', '2025-11-03 14:00', '2025-11-06 12:50', '2025-11-11 11:55', '2025-11-18 11:45', '2025-11-20 11:35', '2025-11-21 12:20', '2025-11-25 13:10', '2025-11-27 14:40', '2025-12-12 14:05', '2025-12-22 14:35', '2026-01-12 12:15', '2026-01-21 12:15', '2026-01-22 14:35', '2026-01-27 11:45', '2026-02-02 11:40', '2026-02-04 13:55', '2026-02-13 12:35', '2026-02-18 14:25', '2026-02-20 14:20', '2026-02-23 14:50', '2026-02-26 14:45', '2026-02-27 14:00', '2026-03-04 13:15', '2026-03-05 14:40', '2026-03-09 14:40', '2026-03-23 13:50', '2026-03-24 12:25', '2026-04-02 12:35', '2026-04-06 12:50', '2026-04-07 12:00', '2026-04-13 11:55', '2026-04-16 14:35', '2026-04-23 13:25', '2026-04-27 13:10', '2026-04-30 12:15', '2026-05-07 12:40', '2026-05-25 14:45'];
+        const equity = [54860.843139938544, 55215.14467843065, 57431.95083718661, 56842.37715675505, 63730.12337393919, 69913.38414960666, 66555.96449991048, 67741.01669741004, 67926.5222097256, 77554.00127457675, 76071.55522542386, 81706.49065915364, 91330.74103230414, 90502.2945500823, 89409.8301698969, 92664.8997081761, 90821.05878490573, 89904.89976927194, 92975.0270025621, 91183.11676598128, 91455.56223095534, 88097.48520715785, 94379.43360372217, 92957.87725762097, 90873.44555135343, 90159.634405479, 87449.30471220435, 88332.20149562534, 85849.16965954476, 84141.01948313916, 86252.60717061113, 84651.08922593179, 90712.01884141969, 87358.73258512649, 87240.76334600954, 88973.06926564134, 92292.09067563854, 91835.45119420432, 90224.373824668, 95568.90067206828, 93411.88219201312, 94030.4696872753, 93637.01389235533, 93722.71308659726, 95271.26519494259, 98110.04981153825, 99585.9747895547, 98971.60798207964, 98609.53612925758, 95270.25283457019, 96469.16355234117, 98479.14241923348, 98513.33124801698, 98459.75188950196, 96602.52872529678, 96349.52976143696, 97196.33602714486, 95347.92986865382, 93346.28162469078, 92789.29523938056, 93300.91732431848, 93521.38824098255, 90226.64167653043, 92795.74245890017, 93914.88262178436, 93576.64328128705, 91911.04348952402, 93067.38351518281, 91527.30865767147, 94049.26411001166, 92927.87707684255, 96086.8104284475, 103892.56321166933, 101941.72493310891, 105154.51811190722, 106959.69238257976, 108474.19419765225, 113439.67901464504, 122291.83043686561, 118932.54905243228, 118441.06969372547, 126091.11841790969, 125583.15481437242, 126069.43955849174, 124719.96737689199, 125111.54754951893, 128290.13828688696, 126194.55617511744, 123741.1270612145, 129102.63060751505, 128708.03472748952, 131431.41642477532, 132807.6243714369, 130295.14868494144, 132566.11543174824, 130281.6109965628, 129128.84401793386, 130022.8588117566, 130669.02772414083, 128334.22209492404, 133162.10511679295, 129808.17968108728, 131992.8861249073, 129701.08977294482, 130467.08075562623, 132632.60503382748, 134320.31931494415, 133577.18251464298, 132090.9026208875, 135934.5682249983, 137025.13208127522, 135233.20264029515, 136828.198460698, 135469.29325821507, 136607.16367255407, 139091.45530757174, 138815.52759090965, 143843.68647263007, 146514.17482637183, 145508.46757284796, 148445.8767774006, 148832.57547703863, 153956.63013333673, 155119.97756889253, 152359.77684787882, 151019.3206044187, 156864.72644962225, 154992.2192189102, 152626.27711619507, 153362.32430298004, 151924.7227552419, 152442.4542993191, 152721.78079493425, 159595.36896481994, 166950.79340031216, 163607.56434298924, 165355.1975767594, 163757.85749439424, 168876.753219573, 167482.73517169687, 164257.58787212527, 164046.93813664353, 162106.5897981628, 159903.21973062833, 157981.6790583457, 155980.6456327084, 156267.22446335483, 162205.09117729744, 160118.10378816095, 156759.3755787983, 154995.15324062674, 152783.42492596514, 158869.8402268053, 157357.75481353156, 160405.03588512348, 163606.58196959976, 160263.83704927049, 157587.1386870662, 156582.55620514133, 153977.86304667837, 163600.7812625422, 161167.97080898343, 170792.08396244672, 172106.91705108015, 170718.02254488756, 167926.70357115698, 165187.42993524065, 162460.6643967111, 169394.32977624962, 169369.77706287848, 167827.8754416891, 165227.2020807595, 167405.75558002072, 165494.60162233075, 167614.59959218235, 164275.8138509469, 164835.7878376989, 165792.17656704507, 165477.51466094723, 163980.56038118718, 168551.4786959521, 172507.0769083922, 170295.91783140652, 178054.10045502867, 179885.4971296505, 180031.18950877016, 178369.4483224716, 178738.86153691498, 177784.45189875225, 179514.3860416578, 177534.27979327022, 177373.88312579234, 175708.13117006538, 173549.5254516436, 171576.3384323613, 175478.50306171126, 174092.7478621127, 179791.49522867406, 176433.71805033972, 173558.9022532298, 171619.92212977097, 170254.98535758376, 172051.8056691222, 169142.98020360083, 170368.17187640228, 167739.32599477816, 166635.23398181656, 163805.12003628234, 160460.05153622665, 159289.10919529982, 157379.46675131522, 167005.641998793, 165276.59261478548, 167117.8634930097, 166002.5984572491, 164011.3413111866, 163966.7080240041, 164113.99108219228, 164224.2006838349, 173254.0343169707, 179226.44007669107, 180781.6857706317, 177453.67734586424, 186287.6177442095, 185140.86282271403, 183050.24344133932, 183939.8393293269, 181944.60548319836, 182898.93536137725, 182143.325714698, 180093.03502504475, 180155.75957791545, 185483.7847231941, 189282.93503531098, 187236.54046983624, 196744.35752387205, 201067.67414938402, 207970.62308545748, 204865.91822165812, 205538.45755292464, 203866.44532137195, 202186.50664483695, 201853.5009737826, 207005.02430797232, 205296.97372046605, 206322.12058847182];
+        
+        const ctx = document.getElementById('equityChart').getContext('2d');
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates.map((_, i) => `Trade ${i + 1}`),
+                datasets: [{
+                    label: 'Account Equity (Rs)',
+                    data: equity,
+                    borderColor: '#10b981',
+                    borderWidth: 2.5,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 1,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#10b981',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: '#111827',
+                        titleColor: '#9ca3af',
+                        bodyColor: '#f3f4f6',
+                        borderColor: 'rgba(255,255,255,0.08)',
+                        borderWidth: 1,
+                        callbacks: {
+                            title: function(context) {
+                                const idx = context[0].dataIndex;
+                                return dates[idx];
+                            },
+                            label: function(context) {
+                                return "Equity: Rs " + Number(context.parsed.y).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.03)'
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                family: 'Plus Jakarta Sans',
+                                size: 10
+                            }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.03)'
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                family: 'Plus Jakarta Sans',
+                                size: 10
+                            },
+                            callback: function(value) {
+                                return "Rs " + Number(value).toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

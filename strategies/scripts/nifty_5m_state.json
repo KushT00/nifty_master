@@ -1,0 +1,24 @@
+{
+  "date": "2026-06-19",
+  "bullTrend": false,
+  "bearTrend": true,
+  "longPullbackReady": false,
+  "shortPullbackReady": true,
+  "lastSignal": -1,
+  "oppositeSeen": false,
+  "position": {
+    "active": true,
+    "symbol": "NIFTY23JUN2624050PE",
+    "option_type": "PE",
+    "direction": "SHORT",
+    "entry_type": "SMART_REENTRY",
+    "entry_spot": 23916.45,
+    "entry_option_price": 187.5,
+    "entry_time": "2026-06-19T13:25:14.561062",
+    "trail_high": 0.0,
+    "trail_low": 23914.85,
+    "stop_loss": 24095.823375000004,
+    "trail_active": false,
+    "lot_size": 65
+  }
+}

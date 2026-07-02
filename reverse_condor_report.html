@@ -1,0 +1,4415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nifty Reverse Condor — Backtest Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: rgba(17,24,39,0.75);
+            --card-border: rgba(255,255,255,0.08);
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
+            --dim: #6b7280;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(16,185,129,0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59,130,246,0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+        header {
+            padding: 28px 5% 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            background: rgba(11,15,25,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+        .container { max-width: 1440px; margin: 0 auto; padding: 0 24px; }
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 32px 0 14px;
+        }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .grid-2-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+        @media (max-width: 1100px) {
+            .grid-4 { grid-template-columns: repeat(2,1fr); }
+            .grid-3 { grid-template-columns: repeat(2,1fr); }
+            .grid-2, .grid-2-3 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .grid-4, .grid-3 { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px;
+            backdrop-filter: blur(14px);
+            position: relative;
+            overflow: hidden;
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -6px rgba(0,0,0,.4); }
+        .card::after { content:''; position:absolute; top:0; left:0; width:4px; height:100%; }
+        .card.g::after { background: var(--primary); }
+        .card.b::after { background: var(--secondary); }
+        .card.a::after { background: var(--accent); }
+        .card.d::after { background: var(--danger); }
+        .card.p::after { background: var(--purple); }
+        .stat-label { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:8px; }
+        .stat-val { font-family:'Outfit',sans-serif; font-size:26px; font-weight:700; margin-bottom:4px; }
+        .stat-sub { font-size:11px; color:var(--dim); }
+        .text-success { color:#10b981!important; }
+        .text-danger  { color:#ef4444!important; }
+        .text-accent  { color:#f59e0b!important; }
+        .card-chart {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px;
+            backdrop-filter: blur(14px);
+        }
+        .card-chart h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+        .chart-wrap { position:relative; height:320px; }
+        .card-table {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px;
+            backdrop-filter: blur(14px);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .card-table h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+        .tbl-wrap { overflow-x:auto; max-height:480px; overflow-y:auto; border-radius:8px; border:1px solid var(--card-border); }
+        table { width:100%; border-collapse:collapse; font-size:12.5px; }
+        th {
+            background: rgba(255,255,255,0.03);
+            color: var(--muted);
+            padding: 10px 14px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(5px);
+            white-space: nowrap;
+        }
+        td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.025); color:var(--text); white-space:nowrap; }
+        tr:hover td { background: rgba(255,255,255,0.015); }
+        .badge {
+            display:inline-block; padding:3px 7px;
+            font-size:10px; font-weight:600; border-radius:4px; text-transform:uppercase;
+        }
+        .badge-success  { background:rgba(16,185,129,.15); color:#10b981; }
+        .badge-accent   { background:rgba(245,158,11,.15);  color:#f59e0b; }
+        .badge-secondary{ background:rgba(59,130,246,.15);  color:#3b82f6; }
+        .badge-muted    { background:rgba(107,114,128,.15); color:#9ca3af; }
+        .badge-wed      { background:rgba(16,185,129,.15);  color:#10b981; }
+        .badge-thu      { background:rgba(59,130,246,.15);  color:#3b82f6; }
+        .badge-fri      { background:rgba(245,158,11,.15);  color:#f59e0b; }
+        .font-weight-bold { font-weight:600; }
+        ::-webkit-scrollbar { width:6px; height:6px; }
+        ::-webkit-scrollbar-track { background:rgba(0,0,0,.1); }
+        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:4px; }
+        .strategy-box {
+            background: linear-gradient(135deg, rgba(16,185,129,.08), rgba(59,130,246,.05));
+            border: 1px solid rgba(16,185,129,.2);
+            border-left: 5px solid var(--primary);
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .strategy-box strong { color:#38bdf8; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="logo">
+        <h1>NIFTY REVERSE CONDOR</h1>
+        <p>Intraday Options Strategy — Backtest Report (Jan 2022 → Present)</p>
+    </div>
+    <div>
+        <span class="badge badge-success" style="font-size:12px; padding:6px 14px;">
+            Wed / Thu / Fri | 09:20 Entry | 15:10 Exit
+        </span>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="strategy-box">
+        <strong>Strategy:</strong> Every Wednesday, Thursday &amp; Friday at 09:20 AM — Sell <strong>3 Lots ATM CE + 3 Lots ATM PE</strong> and buy <strong>20 Lots (ATM+500) CE + 20 Lots (ATM−500) PE</strong> as hedge.
+        Exit at <strong>10% profit (Rs.20,000)</strong>, or lock-and-exit at <strong>4% (Rs.8,000)</strong> once 5% (Rs.10,000) is touched, else square off at <strong>3:10 PM</strong>. No stop loss.
+        Capital: <strong>Rs.2,50,000 total</strong> | Deployed: Rs.2,00,000 | Lot Size: 65.
+        &nbsp;|&nbsp; <span style="color:#f59e0b;">⚠ Pricing: Skew-Adjusted BS — ATM IV = VIX×0.90 | OTM CE = VIX×0.82 | OTM PE = VIX×1.15</span>
+    </div>
+
+    <p class="section-title">📊 Key Performance Metrics</p>
+    <div class="grid-4">
+        <div class="card g">
+            <div class="stat-label">Total Net PnL</div>
+            <div class="stat-val text-success">Rs.+1,575,084</div>
+            <div class="stat-sub">On Rs.2.5L Total Capital</div>
+        </div>
+        <div class="card b">
+            <div class="stat-label">ROI on 2.5L Capital</div>
+            <div class="stat-val">630.0%</div>
+            <div class="stat-sub">140.5% Annualized over 4.5 yrs</div>
+        </div>
+        <div class="card a">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-val">51.6%</div>
+            <div class="stat-sub">341 Wins / 320 Losses / 661 Trades</div>
+        </div>
+        <div class="card d">
+            <div class="stat-label">Max Drawdown</div>
+            <div class="stat-val text-danger">Rs.66,018</div>
+            <div class="stat-sub">Recovery Factor: 23.86</div>
+        </div>
+    </div>
+
+    <div class="grid-4">
+        <div class="card b">
+            <div class="stat-label">Profit Factor</div>
+            <div class="stat-val">2.13</div>
+            <div class="stat-sub">Gross Wins ÷ Gross Losses</div>
+        </div>
+        <div class="card g">
+            <div class="stat-label">Avg Win / Avg Loss</div>
+            <div class="stat-val" style="font-size:20px;">Rs.+8,718 / -4,368</div>
+            <div class="stat-sub">Per trade average</div>
+        </div>
+        <div class="card p">
+            <div class="stat-label">Sharpe / Sortino</div>
+            <div class="stat-val">4.23 / 16.66</div>
+            <div class="stat-sub">Annualized (daily returns)</div>
+        </div>
+        <div class="card a">
+            <div class="stat-label">Calmar / Martin</div>
+            <div class="stat-val">5.32 / 15.54</div>
+            <div class="stat-sub">Ulcer Index: 8.59% | RF: 7%</div>
+        </div>
+    </div>
+
+    <div class="grid-4">
+        <div class="card b">
+            <div class="stat-label">Expectancy / Trade</div>
+            <div class="stat-val text-success">Rs.+2,383</div>
+            <div class="stat-sub">Mean PnL per trade (Rs.)</div>
+        </div>
+        <div class="card g">
+            <div class="stat-label">Max Win Streak</div>
+            <div class="stat-val text-success">10 Trades</div>
+            <div class="stat-sub">Consecutive winning trades</div>
+        </div>
+        <div class="card d">
+            <div class="stat-label">Max Loss Streak</div>
+            <div class="stat-val text-danger">9 Trades</div>
+            <div class="stat-sub">Consecutive losing trades</div>
+        </div>
+        <div class="card a">
+            <div class="stat-label">Max Monthly Loss Streak</div>
+            <div class="stat-val">4 Months</div>
+            <div class="stat-sub">Consecutive negative months</div>
+        </div>
+    </div>
+
+    <p class="section-title">📈 Equity Curve &amp; Exit Distribution</p>
+    <div class="grid-2-3">
+        <div class="card-chart">
+            <h2>Cumulative PnL Curve (Rs.) — All 661 Trades</h2>
+            <div class="chart-wrap"><canvas id="equityChart"></canvas></div>
+        </div>
+        <div class="card-chart">
+            <h2>Exit Reason Distribution</h2>
+            <div class="chart-wrap"><canvas id="reasonChart"></canvas></div>
+        </div>
+    </div>
+
+    <p class="section-title">📅 Monthly PnL Bars</p>
+    <div class="card-chart" style="margin-bottom:24px;">
+        <h2>Monthly PnL Breakdown (Rs.)</h2>
+        <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+    </div>
+
+    <p class="section-title">📋 Day-wise &amp; Monthly Breakdown</p>
+    <div class="grid-2">
+        <div class="card-table">
+            <h2>Day-wise Performance (Mon / Wed / Thu)</h2>
+            <div class="tbl-wrap">
+                <table>
+                    <thead><tr><th>Day</th><th>Trades</th><th>Total PnL</th><th>Win Rate</th></tr></thead>
+                    <tbody>
+        <tr>
+            <td class="font-weight-bold">Wed</td>
+            <td>221</td>
+            <td class="text-success font-weight-bold">Rs.+357,355</td>
+            <td>43.4%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">Thu</td>
+            <td>221</td>
+            <td class="text-success font-weight-bold">Rs.+781,899</td>
+            <td>59.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">Fri</td>
+            <td>219</td>
+            <td class="text-success font-weight-bold">Rs.+435,829</td>
+            <td>51.6%</td>
+        </tr></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-table">
+            <h2>Monthly Aggregate</h2>
+            <div class="tbl-wrap">
+                <table>
+                    <thead><tr><th>Month</th><th>Trades</th><th>PnL Rs.</th><th>ROI%</th><th>Win%</th></tr></thead>
+                    <tbody>
+        <tr>
+            <td class="font-weight-bold">2026-07</td>
+            <td>1</td>
+            <td class="text-danger font-weight-bold">Rs.-2,599</td>
+            <td class="text-danger">-1.04%</td>
+            <td>0.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2026-06</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+4,588</td>
+            <td class="text-success">+1.84%</td>
+            <td>45.5%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2026-05</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+35,683</td>
+            <td class="text-success">+14.27%</td>
+            <td>63.6%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2026-04</td>
+            <td>13</td>
+            <td class="text-success font-weight-bold">Rs.+64,116</td>
+            <td class="text-success">+25.65%</td>
+            <td>53.8%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2026-03</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+64,644</td>
+            <td class="text-success">+25.86%</td>
+            <td>72.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2026-02</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+36,562</td>
+            <td class="text-success">+14.62%</td>
+            <td>66.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2026-01</td>
+            <td>13</td>
+            <td class="text-success font-weight-bold">Rs.+94,846</td>
+            <td class="text-success">+37.94%</td>
+            <td>76.9%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-12</td>
+            <td>12</td>
+            <td class="text-danger font-weight-bold">Rs.-6,925</td>
+            <td class="text-danger">-2.77%</td>
+            <td>41.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-11</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+415</td>
+            <td class="text-success">+0.17%</td>
+            <td>54.5%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-10</td>
+            <td>13</td>
+            <td class="text-success font-weight-bold">Rs.+4,279</td>
+            <td class="text-success">+1.71%</td>
+            <td>46.2%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-09</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+29,718</td>
+            <td class="text-success">+11.89%</td>
+            <td>50.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-08</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+43,515</td>
+            <td class="text-success">+17.41%</td>
+            <td>63.6%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-07</td>
+            <td>14</td>
+            <td class="text-success font-weight-bold">Rs.+51,961</td>
+            <td class="text-success">+20.78%</td>
+            <td>57.1%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-06</td>
+            <td>12</td>
+            <td class="text-danger font-weight-bold">Rs.-26,227</td>
+            <td class="text-danger">-10.49%</td>
+            <td>33.3%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-05</td>
+            <td>13</td>
+            <td class="text-success font-weight-bold">Rs.+23,676</td>
+            <td class="text-success">+9.47%</td>
+            <td>61.5%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-04</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+23,884</td>
+            <td class="text-success">+9.55%</td>
+            <td>36.4%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-03</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+44,941</td>
+            <td class="text-success">+17.98%</td>
+            <td>45.5%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-02</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+84,453</td>
+            <td class="text-success">+33.78%</td>
+            <td>81.8%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2025-01</td>
+            <td>15</td>
+            <td class="text-success font-weight-bold">Rs.+38,941</td>
+            <td class="text-success">+15.58%</td>
+            <td>46.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-12</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+33,039</td>
+            <td class="text-success">+13.22%</td>
+            <td>45.5%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-11</td>
+            <td>10</td>
+            <td class="text-success font-weight-bold">Rs.+67,410</td>
+            <td class="text-success">+26.96%</td>
+            <td>60.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-10</td>
+            <td>13</td>
+            <td class="text-success font-weight-bold">Rs.+78,154</td>
+            <td class="text-success">+31.26%</td>
+            <td>84.6%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-09</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+44,739</td>
+            <td class="text-success">+17.90%</td>
+            <td>58.3%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-08</td>
+            <td>13</td>
+            <td class="text-danger font-weight-bold">Rs.-23,543</td>
+            <td class="text-danger">-9.42%</td>
+            <td>30.8%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-07</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+43,714</td>
+            <td class="text-success">+17.49%</td>
+            <td>58.3%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-06</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+22,954</td>
+            <td class="text-success">+9.18%</td>
+            <td>50.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-05</td>
+            <td>14</td>
+            <td class="text-success font-weight-bold">Rs.+32,665</td>
+            <td class="text-success">+13.07%</td>
+            <td>35.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-04</td>
+            <td>10</td>
+            <td class="text-success font-weight-bold">Rs.+43,988</td>
+            <td class="text-success">+17.60%</td>
+            <td>50.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-03</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+7,290</td>
+            <td class="text-success">+2.92%</td>
+            <td>27.3%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-02</td>
+            <td>13</td>
+            <td class="text-success font-weight-bold">Rs.+75,517</td>
+            <td class="text-success">+30.21%</td>
+            <td>69.2%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2024-01</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+35,867</td>
+            <td class="text-success">+14.35%</td>
+            <td>75.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-12</td>
+            <td>13</td>
+            <td class="text-danger font-weight-bold">Rs.-9,895</td>
+            <td class="text-danger">-3.96%</td>
+            <td>7.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-11</td>
+            <td>14</td>
+            <td class="text-danger font-weight-bold">Rs.-12,715</td>
+            <td class="text-danger">-5.09%</td>
+            <td>42.9%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-10</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+9,762</td>
+            <td class="text-success">+3.90%</td>
+            <td>41.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-09</td>
+            <td>13</td>
+            <td class="text-success font-weight-bold">Rs.+888</td>
+            <td class="text-success">+0.36%</td>
+            <td>38.5%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-08</td>
+            <td>14</td>
+            <td class="text-success font-weight-bold">Rs.+20,656</td>
+            <td class="text-success">+8.26%</td>
+            <td>64.3%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-07</td>
+            <td>12</td>
+            <td class="text-danger font-weight-bold">Rs.-4,410</td>
+            <td class="text-danger">-1.76%</td>
+            <td>41.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-06</td>
+            <td>13</td>
+            <td class="text-danger font-weight-bold">Rs.-8,499</td>
+            <td class="text-danger">-3.40%</td>
+            <td>53.8%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-05</td>
+            <td>13</td>
+            <td class="text-danger font-weight-bold">Rs.-6,778</td>
+            <td class="text-danger">-2.71%</td>
+            <td>46.2%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-04</td>
+            <td>10</td>
+            <td class="text-danger font-weight-bold">Rs.-29,424</td>
+            <td class="text-danger">-11.77%</td>
+            <td>30.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-03</td>
+            <td>14</td>
+            <td class="text-success font-weight-bold">Rs.+11,605</td>
+            <td class="text-success">+4.64%</td>
+            <td>35.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-02</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+42,293</td>
+            <td class="text-success">+16.92%</td>
+            <td>50.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2023-01</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+35,995</td>
+            <td class="text-success">+14.40%</td>
+            <td>72.7%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-12</td>
+            <td>14</td>
+            <td class="text-success font-weight-bold">Rs.+57,980</td>
+            <td class="text-success">+23.19%</td>
+            <td>71.4%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-11</td>
+            <td>13</td>
+            <td class="text-danger font-weight-bold">Rs.-15,682</td>
+            <td class="text-danger">-6.27%</td>
+            <td>46.2%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-10</td>
+            <td>10</td>
+            <td class="text-success font-weight-bold">Rs.+8,692</td>
+            <td class="text-success">+3.48%</td>
+            <td>50.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-09</td>
+            <td>14</td>
+            <td class="text-success font-weight-bold">Rs.+62,295</td>
+            <td class="text-success">+24.92%</td>
+            <td>57.1%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-08</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+53,280</td>
+            <td class="text-success">+21.31%</td>
+            <td>50.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-07</td>
+            <td>13</td>
+            <td class="text-danger font-weight-bold">Rs.-8,595</td>
+            <td class="text-danger">-3.44%</td>
+            <td>23.1%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-06</td>
+            <td>14</td>
+            <td class="text-success font-weight-bold">Rs.+67,062</td>
+            <td class="text-success">+26.82%</td>
+            <td>50.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-05</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+139,984</td>
+            <td class="text-success">+55.99%</td>
+            <td>83.3%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-04</td>
+            <td>11</td>
+            <td class="text-success font-weight-bold">Rs.+19,272</td>
+            <td class="text-success">+7.71%</td>
+            <td>54.5%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-03</td>
+            <td>13</td>
+            <td class="text-success font-weight-bold">Rs.+39,954</td>
+            <td class="text-success">+15.98%</td>
+            <td>53.8%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-02</td>
+            <td>12</td>
+            <td class="text-success font-weight-bold">Rs.+31,119</td>
+            <td class="text-success">+12.45%</td>
+            <td>50.0%</td>
+        </tr>
+        <tr>
+            <td class="font-weight-bold">2022-01</td>
+            <td>11</td>
+            <td class="text-danger font-weight-bold">Rs.-2,019</td>
+            <td class="text-danger">-0.81%</td>
+            <td>36.4%</td>
+        </tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-table">
+        <h2>Detailed Trade Log (Most Recent First — up to 200 trades)</h2>
+        <div class="tbl-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th><th>Day</th><th>Entry</th><th>Exit</th>
+                        <th>Entry Spot</th><th>Exit Spot</th><th>ATM</th>
+                        <th>ATM CE</th><th>ATM PE</th><th>OTM CE</th><th>OTM PE</th>
+                        <th>VIX</th>
+                        <th>PnL Rs.</th><th>PnL %</th><th>Hold</th><th>Exit Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <tr>
+            <td>1</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-07-01 09:20</td>
+            <td>12:30</td>
+            <td>23918</td>
+            <td>24028</td>
+            <td>23900</td>
+            <td>174.7</td>
+            <td>128.5</td>
+            <td>15.6</td>
+            <td>30.0</td>
+            <td>13.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-2,599</td>
+            <td class="text-danger">-1.30%</td>
+            <td>190m</td>
+            <td><span class="badge badge-muted">OPEN_AT_END</span></td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-06-25 09:20</td>
+            <td>15:10</td>
+            <td>24133</td>
+            <td>24056</td>
+            <td>24150</td>
+            <td>139.1</td>
+            <td>132.2</td>
+            <td>7.7</td>
+            <td>25.2</td>
+            <td>13.1%</td>
+            <td class="text-success font-weight-bold">Rs.+5,535</td>
+            <td class="text-success">+2.77%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-06-24 09:20</td>
+            <td>15:10</td>
+            <td>23849</td>
+            <td>24006</td>
+            <td>23850</td>
+            <td>164.0</td>
+            <td>136.8</td>
+            <td>13.7</td>
+            <td>32.1</td>
+            <td>13.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,697</td>
+            <td class="text-danger">-1.85%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-06-19 09:20</td>
+            <td>15:10</td>
+            <td>23979</td>
+            <td>24027</td>
+            <td>24000</td>
+            <td>119.8</td>
+            <td>121.3</td>
+            <td>4.0</td>
+            <td>17.3</td>
+            <td>13.0%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,833</td>
+            <td class="text-danger">-2.42%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-06-18 09:20</td>
+            <td>15:10</td>
+            <td>24085</td>
+            <td>24177</td>
+            <td>24100</td>
+            <td>136.2</td>
+            <td>126.8</td>
+            <td>6.8</td>
+            <td>22.4</td>
+            <td>12.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,671</td>
+            <td class="text-danger">-3.34%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-06-17 09:20</td>
+            <td>15:10</td>
+            <td>23982</td>
+            <td>24084</td>
+            <td>24000</td>
+            <td>154.2</td>
+            <td>143.2</td>
+            <td>11.9</td>
+            <td>33.4</td>
+            <td>13.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-7,105</td>
+            <td class="text-danger">-3.55%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-06-12 09:20</td>
+            <td>11:10</td>
+            <td>23447</td>
+            <td>23378</td>
+            <td>23450</td>
+            <td>142.0</td>
+            <td>125.8</td>
+            <td>7.8</td>
+            <td>23.0</td>
+            <td>14.7%</td>
+            <td class="text-success font-weight-bold">Rs.+5,638</td>
+            <td class="text-success">+2.82%</td>
+            <td>110m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-06-11 09:20</td>
+            <td>15:10</td>
+            <td>23116</td>
+            <td>23166</td>
+            <td>23100</td>
+            <td>175.6</td>
+            <td>136.5</td>
+            <td>16.9</td>
+            <td>34.1</td>
+            <td>15.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,686</td>
+            <td class="text-danger">-2.84%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>9</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-06-10 09:20</td>
+            <td>15:10</td>
+            <td>23327</td>
+            <td>23200</td>
+            <td>23350</td>
+            <td>173.7</td>
+            <td>168.9</td>
+            <td>20.0</td>
+            <td>51.7</td>
+            <td>15.6%</td>
+            <td class="text-success font-weight-bold">Rs.+14,079</td>
+            <td class="text-success">+7.04%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-06-05 09:20</td>
+            <td>14:25</td>
+            <td>23456</td>
+            <td>23352</td>
+            <td>23450</td>
+            <td>156.4</td>
+            <td>131.2</td>
+            <td>11.3</td>
+            <td>28.0</td>
+            <td>15.8%</td>
+            <td class="text-success font-weight-bold">Rs.+7,928</td>
+            <td class="text-success">+3.96%</td>
+            <td>305m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>11</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-06-04 09:20</td>
+            <td>15:10</td>
+            <td>23344</td>
+            <td>23418</td>
+            <td>23350</td>
+            <td>168.9</td>
+            <td>150.9</td>
+            <td>16.6</td>
+            <td>40.4</td>
+            <td>15.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-7,473</td>
+            <td class="text-danger">-3.74%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>12</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-06-03 09:20</td>
+            <td>11:15</td>
+            <td>23300</td>
+            <td>23220</td>
+            <td>23300</td>
+            <td>192.4</td>
+            <td>164.6</td>
+            <td>25.7</td>
+            <td>53.2</td>
+            <td>16.3%</td>
+            <td class="text-success font-weight-bold">Rs.+6,874</td>
+            <td class="text-success">+3.44%</td>
+            <td>115m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>13</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-05-29 09:20</td>
+            <td>13:10</td>
+            <td>23962</td>
+            <td>23769</td>
+            <td>23950</td>
+            <td>166.5</td>
+            <td>134.9</td>
+            <td>14.2</td>
+            <td>31.6</td>
+            <td>16.2%</td>
+            <td class="text-success font-weight-bold">Rs.+23,416</td>
+            <td class="text-success">+11.71%</td>
+            <td>230m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>14</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-05-27 09:20</td>
+            <td>15:10</td>
+            <td>23929</td>
+            <td>23904</td>
+            <td>23950</td>
+            <td>172.1</td>
+            <td>164.8</td>
+            <td>19.0</td>
+            <td>48.9</td>
+            <td>15.0%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,348</td>
+            <td class="text-danger">-0.67%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>15</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-05-22 09:20</td>
+            <td>15:10</td>
+            <td>23693</td>
+            <td>23718</td>
+            <td>23700</td>
+            <td>170.6</td>
+            <td>158.4</td>
+            <td>17.9</td>
+            <td>44.9</td>
+            <td>17.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-7,110</td>
+            <td class="text-danger">-3.56%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>16</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-05-21 09:20</td>
+            <td>13:35</td>
+            <td>23768</td>
+            <td>23663</td>
+            <td>23750</td>
+            <td>204.0</td>
+            <td>162.1</td>
+            <td>29.6</td>
+            <td>54.2</td>
+            <td>17.8%</td>
+            <td class="text-success font-weight-bold">Rs.+6,773</td>
+            <td class="text-success">+3.39%</td>
+            <td>255m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>17</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-05-20 09:20</td>
+            <td>15:10</td>
+            <td>23461</td>
+            <td>23668</td>
+            <td>23450</td>
+            <td>223.5</td>
+            <td>184.0</td>
+            <td>40.5</td>
+            <td>72.4</td>
+            <td>18.4%</td>
+            <td class="text-success font-weight-bold">Rs.+3,732</td>
+            <td class="text-success">+1.87%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>18</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-05-15 09:20</td>
+            <td>15:10</td>
+            <td>23719</td>
+            <td>23644</td>
+            <td>23700</td>
+            <td>192.4</td>
+            <td>154.2</td>
+            <td>24.3</td>
+            <td>47.1</td>
+            <td>18.8%</td>
+            <td class="text-success font-weight-bold">Rs.+1,015</td>
+            <td class="text-success">+0.51%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>19</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-05-14 09:20</td>
+            <td>10:50</td>
+            <td>23550</td>
+            <td>23473</td>
+            <td>23550</td>
+            <td>200.7</td>
+            <td>177.1</td>
+            <td>30.3</td>
+            <td>62.9</td>
+            <td>18.6%</td>
+            <td class="text-success font-weight-bold">Rs.+6,665</td>
+            <td class="text-success">+3.33%</td>
+            <td>90m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>20</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-05-13 09:20</td>
+            <td>09:50</td>
+            <td>23405</td>
+            <td>23368</td>
+            <td>23400</td>
+            <td>230.7</td>
+            <td>197.2</td>
+            <td>45.5</td>
+            <td>83.1</td>
+            <td>19.4%</td>
+            <td class="text-success font-weight-bold">Rs.+2,342</td>
+            <td class="text-success">+1.17%</td>
+            <td>30m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>21</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-05-08 09:20</td>
+            <td>15:10</td>
+            <td>24218</td>
+            <td>24181</td>
+            <td>24200</td>
+            <td>177.8</td>
+            <td>139.6</td>
+            <td>17.8</td>
+            <td>36.2</td>
+            <td>16.8%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,793</td>
+            <td class="text-danger">-0.90%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>22</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-05-07 09:20</td>
+            <td>15:10</td>
+            <td>24318</td>
+            <td>24303</td>
+            <td>24300</td>
+            <td>196.1</td>
+            <td>153.4</td>
+            <td>25.5</td>
+            <td>47.4</td>
+            <td>16.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,961</td>
+            <td class="text-danger">-1.98%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-05-06 09:20</td>
+            <td>11:25</td>
+            <td>24179</td>
+            <td>24112</td>
+            <td>24200</td>
+            <td>193.6</td>
+            <td>185.4</td>
+            <td>28.6</td>
+            <td>66.6</td>
+            <td>16.7%</td>
+            <td class="text-success font-weight-bold">Rs.+5,953</td>
+            <td class="text-success">+2.98%</td>
+            <td>125m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>24</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-04-30 09:20</td>
+            <td>12:05</td>
+            <td>23946</td>
+            <td>23868</td>
+            <td>23950</td>
+            <td>200.5</td>
+            <td>180.5</td>
+            <td>30.6</td>
+            <td>65.0</td>
+            <td>18.5%</td>
+            <td class="text-success font-weight-bold">Rs.+5,702</td>
+            <td class="text-success">+2.85%</td>
+            <td>165m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>25</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-04-29 09:20</td>
+            <td>15:10</td>
+            <td>24091</td>
+            <td>24170</td>
+            <td>24100</td>
+            <td>207.5</td>
+            <td>187.6</td>
+            <td>34.3</td>
+            <td>71.3</td>
+            <td>17.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-8,570</td>
+            <td class="text-danger">-4.29%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>26</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-04-24 09:20</td>
+            <td>09:50</td>
+            <td>24121</td>
+            <td>23959</td>
+            <td>24100</td>
+            <td>205.2</td>
+            <td>164.4</td>
+            <td>30.3</td>
+            <td>55.9</td>
+            <td>19.7%</td>
+            <td class="text-success font-weight-bold">Rs.+20,189</td>
+            <td class="text-success">+10.09%</td>
+            <td>30m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>27</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-04-23 09:20</td>
+            <td>15:10</td>
+            <td>24202</td>
+            <td>24160</td>
+            <td>24200</td>
+            <td>207.4</td>
+            <td>180.6</td>
+            <td>33.3</td>
+            <td>66.6</td>
+            <td>18.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-2,526</td>
+            <td class="text-danger">-1.26%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>28</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-04-22 09:20</td>
+            <td>10:35</td>
+            <td>24477</td>
+            <td>24401</td>
+            <td>24500</td>
+            <td>213.9</td>
+            <td>207.1</td>
+            <td>39.4</td>
+            <td>86.2</td>
+            <td>18.3%</td>
+            <td class="text-success font-weight-bold">Rs.+7,786</td>
+            <td class="text-success">+3.89%</td>
+            <td>75m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>29</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-04-17 09:20</td>
+            <td>15:10</td>
+            <td>24211</td>
+            <td>24355</td>
+            <td>24200</td>
+            <td>176.9</td>
+            <td>146.6</td>
+            <td>18.4</td>
+            <td>39.7</td>
+            <td>17.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,895</td>
+            <td class="text-danger">-2.95%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>30</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-04-16 09:20</td>
+            <td>09:45</td>
+            <td>24391</td>
+            <td>24328</td>
+            <td>24400</td>
+            <td>197.8</td>
+            <td>182.4</td>
+            <td>29.8</td>
+            <td>65.7</td>
+            <td>18.1%</td>
+            <td class="text-success font-weight-bold">Rs.+6,359</td>
+            <td class="text-success">+3.18%</td>
+            <td>25m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>31</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-04-15 09:20</td>
+            <td>15:10</td>
+            <td>24232</td>
+            <td>24228</td>
+            <td>24250</td>
+            <td>217.9</td>
+            <td>207.3</td>
+            <td>41.1</td>
+            <td>87.3</td>
+            <td>18.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,085</td>
+            <td class="text-danger">-3.04%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>32</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-04-10 09:20</td>
+            <td>15:10</td>
+            <td>23967</td>
+            <td>24058</td>
+            <td>23950</td>
+            <td>193.8</td>
+            <td>157.4</td>
+            <td>25.2</td>
+            <td>49.2</td>
+            <td>18.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-8,171</td>
+            <td class="text-danger">-4.09%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>33</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-04-09 09:20</td>
+            <td>09:55</td>
+            <td>23932</td>
+            <td>23786</td>
+            <td>23950</td>
+            <td>213.6</td>
+            <td>207.5</td>
+            <td>39.3</td>
+            <td>86.4</td>
+            <td>20.4%</td>
+            <td class="text-success font-weight-bold">Rs.+21,176</td>
+            <td class="text-success">+10.59%</td>
+            <td>35m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>34</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-04-08 09:20</td>
+            <td>15:10</td>
+            <td>23898</td>
+            <td>23994</td>
+            <td>23900</td>
+            <td>234.7</td>
+            <td>208.0</td>
+            <td>48.8</td>
+            <td>91.8</td>
+            <td>19.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-8,821</td>
+            <td class="text-danger">-4.41%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>35</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-04-02 09:20</td>
+            <td>14:10</td>
+            <td>22226</td>
+            <td>22627</td>
+            <td>22250</td>
+            <td>243.7</td>
+            <td>244.9</td>
+            <td>58.0</td>
+            <td>121.4</td>
+            <td>25.5%</td>
+            <td class="text-success font-weight-bold">Rs.+35,810</td>
+            <td class="text-success">+17.91%</td>
+            <td>290m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>36</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-04-01 09:20</td>
+            <td>11:25</td>
+            <td>22889</td>
+            <td>22790</td>
+            <td>22900</td>
+            <td>277.0</td>
+            <td>261.0</td>
+            <td>77.5</td>
+            <td>142.5</td>
+            <td>25.0%</td>
+            <td class="text-success font-weight-bold">Rs.+7,163</td>
+            <td class="text-success">+3.58%</td>
+            <td>125m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>37</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-03-27 09:20</td>
+            <td>12:20</td>
+            <td>23040</td>
+            <td>22932</td>
+            <td>23050</td>
+            <td>243.7</td>
+            <td>234.9</td>
+            <td>56.7</td>
+            <td>113.8</td>
+            <td>26.8%</td>
+            <td class="text-success font-weight-bold">Rs.+7,579</td>
+            <td class="text-success">+3.79%</td>
+            <td>180m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>38</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-03-25 09:20</td>
+            <td>11:35</td>
+            <td>23162</td>
+            <td>23359</td>
+            <td>23150</td>
+            <td>288.4</td>
+            <td>248.5</td>
+            <td>82.2</td>
+            <td>135.1</td>
+            <td>24.6%</td>
+            <td class="text-success font-weight-bold">Rs.+5,831</td>
+            <td class="text-success">+2.92%</td>
+            <td>135m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>39</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-03-20 09:20</td>
+            <td>12:40</td>
+            <td>23283</td>
+            <td>23206</td>
+            <td>23300</td>
+            <td>207.1</td>
+            <td>204.6</td>
+            <td>36.2</td>
+            <td>82.7</td>
+            <td>22.8%</td>
+            <td class="text-success font-weight-bold">Rs.+4,648</td>
+            <td class="text-success">+2.32%</td>
+            <td>200m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>40</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-03-19 09:20</td>
+            <td>14:05</td>
+            <td>23290</td>
+            <td>23107</td>
+            <td>23300</td>
+            <td>235.3</td>
+            <td>222.1</td>
+            <td>51.0</td>
+            <td>102.2</td>
+            <td>22.8%</td>
+            <td class="text-success font-weight-bold">Rs.+21,716</td>
+            <td class="text-success">+10.86%</td>
+            <td>285m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>41</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-03-18 09:20</td>
+            <td>15:10</td>
+            <td>23722</td>
+            <td>23793</td>
+            <td>23700</td>
+            <td>234.4</td>
+            <td>184.4</td>
+            <td>45.4</td>
+            <td>75.1</td>
+            <td>18.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-7,020</td>
+            <td class="text-danger">-3.51%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>42</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-03-13 09:20</td>
+            <td>10:55</td>
+            <td>23448</td>
+            <td>23373</td>
+            <td>23450</td>
+            <td>214.7</td>
+            <td>197.1</td>
+            <td>38.5</td>
+            <td>79.3</td>
+            <td>22.6%</td>
+            <td class="text-success font-weight-bold">Rs.+5,935</td>
+            <td class="text-success">+2.97%</td>
+            <td>95m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>43</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-03-12 09:20</td>
+            <td>13:40</td>
+            <td>23564</td>
+            <td>23790</td>
+            <td>23550</td>
+            <td>237.9</td>
+            <td>199.7</td>
+            <td>49.1</td>
+            <td>86.5</td>
+            <td>21.5%</td>
+            <td class="text-success font-weight-bold">Rs.+6,942</td>
+            <td class="text-success">+3.47%</td>
+            <td>260m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>44</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-03-11 09:20</td>
+            <td>10:05</td>
+            <td>24289</td>
+            <td>24118</td>
+            <td>24300</td>
+            <td>249.4</td>
+            <td>231.4</td>
+            <td>59.0</td>
+            <td>112.7</td>
+            <td>21.1%</td>
+            <td class="text-success font-weight-bold">Rs.+23,769</td>
+            <td class="text-success">+11.88%</td>
+            <td>45m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>45</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-03-06 09:20</td>
+            <td>15:10</td>
+            <td>24595</td>
+            <td>24442</td>
+            <td>24600</td>
+            <td>197.0</td>
+            <td>182.1</td>
+            <td>29.5</td>
+            <td>65.3</td>
+            <td>19.9%</td>
+            <td class="text-success font-weight-bold">Rs.+15,219</td>
+            <td class="text-success">+7.61%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>46</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-03-05 09:20</td>
+            <td>15:10</td>
+            <td>24587</td>
+            <td>24715</td>
+            <td>24600</td>
+            <td>194.9</td>
+            <td>183.4</td>
+            <td>28.9</td>
+            <td>65.6</td>
+            <td>17.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-9,137</td>
+            <td class="text-danger">-4.57%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>47</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-03-04 09:20</td>
+            <td>15:10</td>
+            <td>24388</td>
+            <td>24466</td>
+            <td>24400</td>
+            <td>250.9</td>
+            <td>233.7</td>
+            <td>60.0</td>
+            <td>114.8</td>
+            <td>21.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-10,839</td>
+            <td class="text-danger">-5.42%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>48</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-02-27 09:20</td>
+            <td>11:50</td>
+            <td>25395</td>
+            <td>25307</td>
+            <td>25400</td>
+            <td>142.7</td>
+            <td>127.2</td>
+            <td>8.0</td>
+            <td>23.7</td>
+            <td>13.7%</td>
+            <td class="text-success font-weight-bold">Rs.+7,698</td>
+            <td class="text-success">+3.85%</td>
+            <td>150m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>49</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-02-26 09:20</td>
+            <td>12:40</td>
+            <td>25534</td>
+            <td>25460</td>
+            <td>25550</td>
+            <td>148.7</td>
+            <td>138.7</td>
+            <td>10.2</td>
+            <td>30.1</td>
+            <td>13.1%</td>
+            <td class="text-success font-weight-bold">Rs.+6,329</td>
+            <td class="text-success">+3.16%</td>
+            <td>200m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>50</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-02-25 09:20</td>
+            <td>14:10</td>
+            <td>25562</td>
+            <td>25457</td>
+            <td>25550</td>
+            <td>184.2</td>
+            <td>141.4</td>
+            <td>20.0</td>
+            <td>38.4</td>
+            <td>13.5%</td>
+            <td class="text-success font-weight-bold">Rs.+7,820</td>
+            <td class="text-success">+3.91%</td>
+            <td>290m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>51</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-02-20 09:20</td>
+            <td>15:10</td>
+            <td>25453</td>
+            <td>25572</td>
+            <td>25450</td>
+            <td>153.9</td>
+            <td>129.9</td>
+            <td>10.6</td>
+            <td>27.0</td>
+            <td>14.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,842</td>
+            <td class="text-danger">-3.42%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>52</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-02-19 09:20</td>
+            <td>11:20</td>
+            <td>25854</td>
+            <td>25683</td>
+            <td>25850</td>
+            <td>165.1</td>
+            <td>135.4</td>
+            <td>13.8</td>
+            <td>31.7</td>
+            <td>13.5%</td>
+            <td class="text-success font-weight-bold">Rs.+21,080</td>
+            <td class="text-success">+10.54%</td>
+            <td>120m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>53</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-02-18 09:20</td>
+            <td>15:10</td>
+            <td>25742</td>
+            <td>25822</td>
+            <td>25750</td>
+            <td>159.5</td>
+            <td>136.6</td>
+            <td>12.5</td>
+            <td>31.3</td>
+            <td>12.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,124</td>
+            <td class="text-danger">-3.06%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>54</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-02-13 09:20</td>
+            <td>15:10</td>
+            <td>25597</td>
+            <td>25477</td>
+            <td>25600</td>
+            <td>141.0</td>
+            <td>123.0</td>
+            <td>7.3</td>
+            <td>21.7</td>
+            <td>13.3%</td>
+            <td class="text-success font-weight-bold">Rs.+9,917</td>
+            <td class="text-success">+4.96%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>55</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-02-12 09:20</td>
+            <td>15:10</td>
+            <td>25858</td>
+            <td>25807</td>
+            <td>25850</td>
+            <td>148.1</td>
+            <td>114.4</td>
+            <td>7.9</td>
+            <td>19.4</td>
+            <td>11.7%</td>
+            <td class="text-success font-weight-bold">Rs.+1,917</td>
+            <td class="text-success">+0.96%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>56</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-02-11 09:20</td>
+            <td>15:10</td>
+            <td>25985</td>
+            <td>25956</td>
+            <td>26000</td>
+            <td>149.2</td>
+            <td>133.1</td>
+            <td>9.8</td>
+            <td>27.6</td>
+            <td>11.6%</td>
+            <td class="text-success font-weight-bold">Rs.+314</td>
+            <td class="text-success">+0.16%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>57</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-02-06 09:20</td>
+            <td>15:10</td>
+            <td>25601</td>
+            <td>25698</td>
+            <td>25600</td>
+            <td>129.5</td>
+            <td>108.0</td>
+            <td>4.4</td>
+            <td>14.2</td>
+            <td>11.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,885</td>
+            <td class="text-danger">-2.94%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>58</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-02-05 09:20</td>
+            <td>10:10</td>
+            <td>25728</td>
+            <td>25673</td>
+            <td>25750</td>
+            <td>137.0</td>
+            <td>132.8</td>
+            <td>7.4</td>
+            <td>25.1</td>
+            <td>12.2%</td>
+            <td class="text-success font-weight-bold">Rs.+5,192</td>
+            <td class="text-success">+2.60%</td>
+            <td>50m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>59</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-02-04 09:20</td>
+            <td>15:10</td>
+            <td>25713</td>
+            <td>25783</td>
+            <td>25700</td>
+            <td>170.6</td>
+            <td>127.2</td>
+            <td>14.3</td>
+            <td>28.7</td>
+            <td>12.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,855</td>
+            <td class="text-danger">-2.43%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>60</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-01-30 09:20</td>
+            <td>15:10</td>
+            <td>25258</td>
+            <td>25320</td>
+            <td>25250</td>
+            <td>148.0</td>
+            <td>119.7</td>
+            <td>8.4</td>
+            <td>21.5</td>
+            <td>13.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,651</td>
+            <td class="text-danger">-2.83%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>61</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-01-29 09:20</td>
+            <td>10:10</td>
+            <td>25281</td>
+            <td>25212</td>
+            <td>25300</td>
+            <td>149.0</td>
+            <td>142.2</td>
+            <td>10.6</td>
+            <td>31.9</td>
+            <td>13.4%</td>
+            <td class="text-success font-weight-bold">Rs.+7,178</td>
+            <td class="text-success">+3.59%</td>
+            <td>50m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>62</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-01-28 09:20</td>
+            <td>14:40</td>
+            <td>25335</td>
+            <td>25252</td>
+            <td>25350</td>
+            <td>169.1</td>
+            <td>153.2</td>
+            <td>16.8</td>
+            <td>41.8</td>
+            <td>13.5%</td>
+            <td class="text-success font-weight-bold">Rs.+6,505</td>
+            <td class="text-success">+3.25%</td>
+            <td>320m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>63</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-01-23 09:20</td>
+            <td>13:30</td>
+            <td>25275</td>
+            <td>25071</td>
+            <td>25250</td>
+            <td>162.8</td>
+            <td>117.4</td>
+            <td>11.3</td>
+            <td>22.9</td>
+            <td>14.2%</td>
+            <td class="text-success font-weight-bold">Rs.+22,361</td>
+            <td class="text-success">+11.18%</td>
+            <td>250m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>64</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-01-22 09:20</td>
+            <td>12:05</td>
+            <td>25317</td>
+            <td>25230</td>
+            <td>25300</td>
+            <td>167.7</td>
+            <td>125.2</td>
+            <td>13.4</td>
+            <td>27.2</td>
+            <td>13.4%</td>
+            <td class="text-success font-weight-bold">Rs.+6,382</td>
+            <td class="text-success">+3.19%</td>
+            <td>165m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>65</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-01-21 09:20</td>
+            <td>10:35</td>
+            <td>25239</td>
+            <td>25080</td>
+            <td>25250</td>
+            <td>173.3</td>
+            <td>153.8</td>
+            <td>18.1</td>
+            <td>43.0</td>
+            <td>13.8%</td>
+            <td class="text-success font-weight-bold">Rs.+21,787</td>
+            <td class="text-success">+10.89%</td>
+            <td>75m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>66</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-01-16 09:20</td>
+            <td>15:10</td>
+            <td>25730</td>
+            <td>25682</td>
+            <td>25750</td>
+            <td>114.1</td>
+            <td>112.7</td>
+            <td>2.8</td>
+            <td>13.4</td>
+            <td>11.4%</td>
+            <td class="text-success font-weight-bold">Rs.+2,244</td>
+            <td class="text-success">+1.12%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>67</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-01-14 09:20</td>
+            <td>15:10</td>
+            <td>25684</td>
+            <td>25653</td>
+            <td>25700</td>
+            <td>144.2</td>
+            <td>129.2</td>
+            <td>8.5</td>
+            <td>24.9</td>
+            <td>11.3%</td>
+            <td class="text-success font-weight-bold">Rs.+727</td>
+            <td class="text-success">+0.36%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>68</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-01-09 09:20</td>
+            <td>12:25</td>
+            <td>25939</td>
+            <td>25717</td>
+            <td>25950</td>
+            <td>115.0</td>
+            <td>104.9</td>
+            <td>2.6</td>
+            <td>11.1</td>
+            <td>10.9%</td>
+            <td class="text-success font-weight-bold">Rs.+20,635</td>
+            <td class="text-success">+10.32%</td>
+            <td>185m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>69</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-01-08 09:20</td>
+            <td>13:25</td>
+            <td>26120</td>
+            <td>25894</td>
+            <td>26100</td>
+            <td>143.6</td>
+            <td>97.5</td>
+            <td>5.7</td>
+            <td>12.6</td>
+            <td>10.6%</td>
+            <td class="text-success font-weight-bold">Rs.+21,935</td>
+            <td class="text-success">+10.97%</td>
+            <td>245m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>70</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2026-01-07 09:20</td>
+            <td>15:10</td>
+            <td>26128</td>
+            <td>26152</td>
+            <td>26150</td>
+            <td>127.1</td>
+            <td>117.3</td>
+            <td>4.7</td>
+            <td>17.1</td>
+            <td>9.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-2,786</td>
+            <td class="text-danger">-1.39%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>71</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2026-01-02 09:20</td>
+            <td>15:10</td>
+            <td>26182</td>
+            <td>26325</td>
+            <td>26200</td>
+            <td>97.5</td>
+            <td>94.3</td>
+            <td>0.9</td>
+            <td>6.2</td>
+            <td>9.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-7,300</td>
+            <td class="text-danger">-3.65%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>72</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2026-01-01 09:20</td>
+            <td>15:10</td>
+            <td>26166</td>
+            <td>26143</td>
+            <td>26150</td>
+            <td>126.3</td>
+            <td>83.5</td>
+            <td>2.5</td>
+            <td>6.7</td>
+            <td>9.2%</td>
+            <td class="text-success font-weight-bold">Rs.+828</td>
+            <td class="text-success">+0.41%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>73</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-12-31 09:20</td>
+            <td>15:10</td>
+            <td>26013</td>
+            <td>26123</td>
+            <td>26000</td>
+            <td>139.0</td>
+            <td>95.2</td>
+            <td>4.8</td>
+            <td>11.3</td>
+            <td>9.5%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,447</td>
+            <td class="text-danger">-2.22%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>74</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-12-26 09:20</td>
+            <td>15:10</td>
+            <td>26129</td>
+            <td>26048</td>
+            <td>26150</td>
+            <td>92.7</td>
+            <td>92.6</td>
+            <td>0.7</td>
+            <td>5.4</td>
+            <td>9.2%</td>
+            <td class="text-success font-weight-bold">Rs.+2,837</td>
+            <td class="text-success">+1.42%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>75</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-12-24 09:20</td>
+            <td>15:10</td>
+            <td>26201</td>
+            <td>26155</td>
+            <td>26200</td>
+            <td>129.8</td>
+            <td>97.8</td>
+            <td>3.8</td>
+            <td>11.0</td>
+            <td>9.2%</td>
+            <td class="text-success font-weight-bold">Rs.+2,206</td>
+            <td class="text-success">+1.10%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>76</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-12-19 09:20</td>
+            <td>15:10</td>
+            <td>25924</td>
+            <td>25970</td>
+            <td>25900</td>
+            <td>119.9</td>
+            <td>74.7</td>
+            <td>1.6</td>
+            <td>4.4</td>
+            <td>9.5%</td>
+            <td class="text-danger font-weight-bold">Rs.-2,454</td>
+            <td class="text-danger">-1.23%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>77</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-12-18 09:20</td>
+            <td>15:10</td>
+            <td>25778</td>
+            <td>25820</td>
+            <td>25800</td>
+            <td>109.7</td>
+            <td>105.9</td>
+            <td>2.1</td>
+            <td>10.7</td>
+            <td>9.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,136</td>
+            <td class="text-danger">-1.57%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>78</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-12-17 09:20</td>
+            <td>15:10</td>
+            <td>25873</td>
+            <td>25816</td>
+            <td>25850</td>
+            <td>148.7</td>
+            <td>94.3</td>
+            <td>6.2</td>
+            <td>12.1</td>
+            <td>9.8%</td>
+            <td class="text-success font-weight-bold">Rs.+2,556</td>
+            <td class="text-success">+1.28%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>79</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-12-12 09:20</td>
+            <td>15:10</td>
+            <td>26003</td>
+            <td>26054</td>
+            <td>26000</td>
+            <td>114.6</td>
+            <td>90.1</td>
+            <td>1.9</td>
+            <td>7.1</td>
+            <td>10.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,061</td>
+            <td class="text-danger">-1.53%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>80</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-12-11 09:20</td>
+            <td>15:10</td>
+            <td>25756</td>
+            <td>25895</td>
+            <td>25750</td>
+            <td>131.9</td>
+            <td>100.1</td>
+            <td>4.2</td>
+            <td>11.9</td>
+            <td>10.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,331</td>
+            <td class="text-danger">-2.67%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>81</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-12-10 09:20</td>
+            <td>12:55</td>
+            <td>25880</td>
+            <td>25793</td>
+            <td>25900</td>
+            <td>138.5</td>
+            <td>127.0</td>
+            <td>7.2</td>
+            <td>22.9</td>
+            <td>10.9%</td>
+            <td class="text-success font-weight-bold">Rs.+7,780</td>
+            <td class="text-success">+3.89%</td>
+            <td>215m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>82</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-12-05 09:20</td>
+            <td>15:10</td>
+            <td>26051</td>
+            <td>26189</td>
+            <td>26050</td>
+            <td>115.9</td>
+            <td>93.3</td>
+            <td>2.1</td>
+            <td>8.0</td>
+            <td>10.3%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,517</td>
+            <td class="text-danger">-3.26%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>83</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-12-04 09:20</td>
+            <td>15:10</td>
+            <td>25950</td>
+            <td>26038</td>
+            <td>25950</td>
+            <td>134.1</td>
+            <td>108.5</td>
+            <td>5.1</td>
+            <td>15.0</td>
+            <td>10.8%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,286</td>
+            <td class="text-danger">-2.64%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>84</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-12-03 09:20</td>
+            <td>09:55</td>
+            <td>26030</td>
+            <td>25952</td>
+            <td>26050</td>
+            <td>142.6</td>
+            <td>131.7</td>
+            <td>8.3</td>
+            <td>25.7</td>
+            <td>11.2%</td>
+            <td class="text-success font-weight-bold">Rs.+7,927</td>
+            <td class="text-success">+3.96%</td>
+            <td>35m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>85</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-11-28 09:20</td>
+            <td>15:10</td>
+            <td>26243</td>
+            <td>26198</td>
+            <td>26250</td>
+            <td>125.5</td>
+            <td>111.1</td>
+            <td>4.1</td>
+            <td>14.6</td>
+            <td>11.6%</td>
+            <td class="text-success font-weight-bold">Rs.+1,848</td>
+            <td class="text-success">+0.92%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>86</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-11-27 09:20</td>
+            <td>15:10</td>
+            <td>26251</td>
+            <td>26213</td>
+            <td>26250</td>
+            <td>147.3</td>
+            <td>120.0</td>
+            <td>8.3</td>
+            <td>21.6</td>
+            <td>11.8%</td>
+            <td class="text-success font-weight-bold">Rs.+885</td>
+            <td class="text-success">+0.44%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>87</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-11-26 09:20</td>
+            <td>15:10</td>
+            <td>25970</td>
+            <td>26214</td>
+            <td>25950</td>
+            <td>172.8</td>
+            <td>121.9</td>
+            <td>14.3</td>
+            <td>26.6</td>
+            <td>12.0%</td>
+            <td class="text-success font-weight-bold">Rs.+10,689</td>
+            <td class="text-success">+5.34%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>88</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-11-21 09:20</td>
+            <td>15:10</td>
+            <td>26136</td>
+            <td>26069</td>
+            <td>26150</td>
+            <td>142.0</td>
+            <td>134.2</td>
+            <td>8.4</td>
+            <td>26.7</td>
+            <td>13.6%</td>
+            <td class="text-success font-weight-bold">Rs.+3,746</td>
+            <td class="text-success">+1.87%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>89</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-11-20 09:20</td>
+            <td>15:10</td>
+            <td>26099</td>
+            <td>26203</td>
+            <td>26100</td>
+            <td>149.7</td>
+            <td>123.9</td>
+            <td>9.1</td>
+            <td>23.6</td>
+            <td>12.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,030</td>
+            <td class="text-danger">-3.02%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>90</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-11-19 09:20</td>
+            <td>15:10</td>
+            <td>25859</td>
+            <td>26059</td>
+            <td>25850</td>
+            <td>166.0</td>
+            <td>126.4</td>
+            <td>13.1</td>
+            <td>27.5</td>
+            <td>12.0%</td>
+            <td class="text-success font-weight-bold">Rs.+1,816</td>
+            <td class="text-success">+0.91%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>91</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-11-14 09:20</td>
+            <td>15:10</td>
+            <td>25811</td>
+            <td>25930</td>
+            <td>25800</td>
+            <td>136.1</td>
+            <td>104.0</td>
+            <td>5.1</td>
+            <td>13.8</td>
+            <td>11.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,622</td>
+            <td class="text-danger">-2.81%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>92</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-11-13 09:20</td>
+            <td>15:10</td>
+            <td>25843</td>
+            <td>25879</td>
+            <td>25850</td>
+            <td>144.9</td>
+            <td>126.1</td>
+            <td>8.3</td>
+            <td>23.7</td>
+            <td>12.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,521</td>
+            <td class="text-danger">-2.26%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>93</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-11-12 09:20</td>
+            <td>15:10</td>
+            <td>25809</td>
+            <td>25884</td>
+            <td>25800</td>
+            <td>167.4</td>
+            <td>127.8</td>
+            <td>13.6</td>
+            <td>28.5</td>
+            <td>12.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,048</td>
+            <td class="text-danger">-2.52%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>94</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-11-07 09:20</td>
+            <td>15:10</td>
+            <td>25374</td>
+            <td>25487</td>
+            <td>25350</td>
+            <td>147.2</td>
+            <td>102.3</td>
+            <td>6.7</td>
+            <td>14.6</td>
+            <td>12.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,850</td>
+            <td class="text-danger">-2.42%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>95</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-11-06 09:20</td>
+            <td>11:00</td>
+            <td>25664</td>
+            <td>25573</td>
+            <td>25650</td>
+            <td>158.0</td>
+            <td>118.0</td>
+            <td>10.3</td>
+            <td>22.4</td>
+            <td>12.4%</td>
+            <td class="text-success font-weight-bold">Rs.+7,501</td>
+            <td class="text-success">+3.75%</td>
+            <td>100m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>96</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-10-31 09:20</td>
+            <td>15:10</td>
+            <td>25864</td>
+            <td>25716</td>
+            <td>25850</td>
+            <td>139.9</td>
+            <td>105.1</td>
+            <td>5.7</td>
+            <td>14.7</td>
+            <td>12.2%</td>
+            <td class="text-success font-weight-bold">Rs.+11,577</td>
+            <td class="text-success">+5.79%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>97</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-10-30 09:20</td>
+            <td>14:10</td>
+            <td>25982</td>
+            <td>25889</td>
+            <td>26000</td>
+            <td>139.2</td>
+            <td>131.0</td>
+            <td>7.6</td>
+            <td>24.8</td>
+            <td>12.1%</td>
+            <td class="text-success font-weight-bold">Rs.+7,997</td>
+            <td class="text-success">+4.00%</td>
+            <td>290m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>98</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-10-29 09:20</td>
+            <td>15:10</td>
+            <td>25981</td>
+            <td>26044</td>
+            <td>26000</td>
+            <td>152.0</td>
+            <td>140.3</td>
+            <td>11.1</td>
+            <td>31.6</td>
+            <td>12.0%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,233</td>
+            <td class="text-danger">-3.12%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>99</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-10-24 09:20</td>
+            <td>15:10</td>
+            <td>25851</td>
+            <td>25800</td>
+            <td>25850</td>
+            <td>127.5</td>
+            <td>105.3</td>
+            <td>4.0</td>
+            <td>13.0</td>
+            <td>11.6%</td>
+            <td class="text-success font-weight-bold">Rs.+2,274</td>
+            <td class="text-success">+1.14%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>100</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-10-23 09:20</td>
+            <td>15:10</td>
+            <td>26003</td>
+            <td>25865</td>
+            <td>26000</td>
+            <td>146.5</td>
+            <td>117.1</td>
+            <td>7.9</td>
+            <td>20.2</td>
+            <td>11.7%</td>
+            <td class="text-success font-weight-bold">Rs.+12,182</td>
+            <td class="text-success">+6.09%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>101</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-10-17 09:20</td>
+            <td>15:10</td>
+            <td>25553</td>
+            <td>25708</td>
+            <td>25550</td>
+            <td>127.6</td>
+            <td>103.5</td>
+            <td>3.9</td>
+            <td>12.4</td>
+            <td>11.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,070</td>
+            <td class="text-danger">-3.03%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>102</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-10-16 09:20</td>
+            <td>15:10</td>
+            <td>25412</td>
+            <td>25569</td>
+            <td>25400</td>
+            <td>138.9</td>
+            <td>100.8</td>
+            <td>5.2</td>
+            <td>13.1</td>
+            <td>10.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,293</td>
+            <td class="text-danger">-2.15%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>103</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-10-15 09:20</td>
+            <td>15:10</td>
+            <td>25242</td>
+            <td>25328</td>
+            <td>25250</td>
+            <td>136.3</td>
+            <td>114.0</td>
+            <td>5.8</td>
+            <td>17.4</td>
+            <td>10.5%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,277</td>
+            <td class="text-danger">-2.64%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>104</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-10-10 09:20</td>
+            <td>15:10</td>
+            <td>25221</td>
+            <td>25284</td>
+            <td>25200</td>
+            <td>120.9</td>
+            <td>79.2</td>
+            <td>1.9</td>
+            <td>5.3</td>
+            <td>10.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,424</td>
+            <td class="text-danger">-1.71%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>105</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-10-09 09:20</td>
+            <td>15:10</td>
+            <td>25060</td>
+            <td>25178</td>
+            <td>25050</td>
+            <td>127.5</td>
+            <td>92.6</td>
+            <td>3.2</td>
+            <td>9.2</td>
+            <td>10.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,299</td>
+            <td class="text-danger">-2.65%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>106</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-10-08 09:20</td>
+            <td>12:45</td>
+            <td>25147</td>
+            <td>25063</td>
+            <td>25150</td>
+            <td>135.8</td>
+            <td>108.7</td>
+            <td>5.4</td>
+            <td>15.3</td>
+            <td>10.3%</td>
+            <td class="text-success font-weight-bold">Rs.+6,185</td>
+            <td class="text-success">+3.09%</td>
+            <td>205m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>107</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-10-03 09:20</td>
+            <td>15:10</td>
+            <td>24784</td>
+            <td>24888</td>
+            <td>24800</td>
+            <td>98.6</td>
+            <td>94.7</td>
+            <td>1.0</td>
+            <td>6.4</td>
+            <td>10.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,478</td>
+            <td class="text-danger">-2.74%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>108</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-10-01 09:20</td>
+            <td>15:10</td>
+            <td>24622</td>
+            <td>24822</td>
+            <td>24600</td>
+            <td>146.3</td>
+            <td>95.1</td>
+            <td>5.9</td>
+            <td>12.1</td>
+            <td>10.3%</td>
+            <td class="text-success font-weight-bold">Rs.+139</td>
+            <td class="text-success">+0.07%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>109</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-09-26 09:20</td>
+            <td>15:10</td>
+            <td>24815</td>
+            <td>24644</td>
+            <td>24800</td>
+            <td>128.5</td>
+            <td>93.1</td>
+            <td>3.3</td>
+            <td>9.4</td>
+            <td>11.4%</td>
+            <td class="text-success font-weight-bold">Rs.+11,764</td>
+            <td class="text-success">+5.88%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>110</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-09-25 09:20</td>
+            <td>15:10</td>
+            <td>25054</td>
+            <td>24883</td>
+            <td>25050</td>
+            <td>131.7</td>
+            <td>102.1</td>
+            <td>4.3</td>
+            <td>12.5</td>
+            <td>10.8%</td>
+            <td class="text-success font-weight-bold">Rs.+14,150</td>
+            <td class="text-success">+7.08%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>111</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-09-24 09:20</td>
+            <td>15:10</td>
+            <td>25092</td>
+            <td>25060</td>
+            <td>25100</td>
+            <td>135.6</td>
+            <td>113.0</td>
+            <td>5.7</td>
+            <td>16.9</td>
+            <td>10.5%</td>
+            <td class="text-success font-weight-bold">Rs.+1,129</td>
+            <td class="text-success">+0.56%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>112</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-09-19 09:20</td>
+            <td>15:10</td>
+            <td>25382</td>
+            <td>25318</td>
+            <td>25400</td>
+            <td>99.4</td>
+            <td>96.7</td>
+            <td>1.1</td>
+            <td>7.0</td>
+            <td>10.0%</td>
+            <td class="text-success font-weight-bold">Rs.+2,709</td>
+            <td class="text-success">+1.35%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>113</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-09-18 09:20</td>
+            <td>15:10</td>
+            <td>25411</td>
+            <td>25423</td>
+            <td>25400</td>
+            <td>127.3</td>
+            <td>91.0</td>
+            <td>3.1</td>
+            <td>8.7</td>
+            <td>9.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,338</td>
+            <td class="text-danger">-0.67%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>114</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-09-17 09:20</td>
+            <td>15:10</td>
+            <td>25296</td>
+            <td>25328</td>
+            <td>25300</td>
+            <td>135.6</td>
+            <td>108.9</td>
+            <td>5.4</td>
+            <td>15.4</td>
+            <td>10.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,017</td>
+            <td class="text-danger">-1.51%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>115</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-09-12 09:20</td>
+            <td>15:10</td>
+            <td>25055</td>
+            <td>25116</td>
+            <td>25050</td>
+            <td>111.7</td>
+            <td>85.9</td>
+            <td>1.5</td>
+            <td>5.9</td>
+            <td>10.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,320</td>
+            <td class="text-danger">-1.66%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>116</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-09-11 09:20</td>
+            <td>15:10</td>
+            <td>25002</td>
+            <td>25001</td>
+            <td>25000</td>
+            <td>125.8</td>
+            <td>98.3</td>
+            <td>3.4</td>
+            <td>10.6</td>
+            <td>10.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-756</td>
+            <td class="text-danger">-0.38%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>117</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-09-10 09:20</td>
+            <td>15:10</td>
+            <td>24963</td>
+            <td>24979</td>
+            <td>24950</td>
+            <td>146.2</td>
+            <td>103.3</td>
+            <td>6.6</td>
+            <td>14.9</td>
+            <td>10.5%</td>
+            <td class="text-danger font-weight-bold">Rs.-2,117</td>
+            <td class="text-danger">-1.06%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>118</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-09-05 09:20</td>
+            <td>10:25</td>
+            <td>24826</td>
+            <td>24722</td>
+            <td>24850</td>
+            <td>102.0</td>
+            <td>105.5</td>
+            <td>1.5</td>
+            <td>9.5</td>
+            <td>10.8%</td>
+            <td class="text-success font-weight-bold">Rs.+6,913</td>
+            <td class="text-success">+3.46%</td>
+            <td>65m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>119</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-09-04 09:20</td>
+            <td>14:30</td>
+            <td>24865</td>
+            <td>24751</td>
+            <td>24850</td>
+            <td>137.1</td>
+            <td>97.3</td>
+            <td>4.7</td>
+            <td>11.7</td>
+            <td>10.8%</td>
+            <td class="text-success font-weight-bold">Rs.+7,605</td>
+            <td class="text-success">+3.80%</td>
+            <td>310m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>120</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-09-03 09:20</td>
+            <td>15:10</td>
+            <td>24541</td>
+            <td>24725</td>
+            <td>24550</td>
+            <td>136.6</td>
+            <td>116.0</td>
+            <td>6.0</td>
+            <td>18.1</td>
+            <td>10.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,004</td>
+            <td class="text-danger">-2.00%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>121</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-08-29 09:20</td>
+            <td>15:10</td>
+            <td>24509</td>
+            <td>24407</td>
+            <td>24500</td>
+            <td>126.5</td>
+            <td>97.8</td>
+            <td>3.4</td>
+            <td>10.5</td>
+            <td>11.8%</td>
+            <td class="text-success font-weight-bold">Rs.+6,056</td>
+            <td class="text-success">+3.03%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>122</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-08-28 09:20</td>
+            <td>15:10</td>
+            <td>24576</td>
+            <td>24502</td>
+            <td>24600</td>
+            <td>129.1</td>
+            <td>128.8</td>
+            <td>5.7</td>
+            <td>21.9</td>
+            <td>12.2%</td>
+            <td class="text-success font-weight-bold">Rs.+5,320</td>
+            <td class="text-success">+2.66%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>123</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-08-22 09:20</td>
+            <td>15:10</td>
+            <td>25022</td>
+            <td>24873</td>
+            <td>25000</td>
+            <td>136.3</td>
+            <td>93.6</td>
+            <td>4.3</td>
+            <td>10.5</td>
+            <td>11.7%</td>
+            <td class="text-success font-weight-bold">Rs.+10,098</td>
+            <td class="text-success">+5.05%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>124</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-08-21 09:20</td>
+            <td>15:10</td>
+            <td>25075</td>
+            <td>25082</td>
+            <td>25050</td>
+            <td>149.3</td>
+            <td>99.3</td>
+            <td>6.8</td>
+            <td>13.9</td>
+            <td>11.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,832</td>
+            <td class="text-danger">-0.92%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>125</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-08-20 09:20</td>
+            <td>15:10</td>
+            <td>24943</td>
+            <td>25049</td>
+            <td>24950</td>
+            <td>149.8</td>
+            <td>127.0</td>
+            <td>9.4</td>
+            <td>25.0</td>
+            <td>11.8%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,854</td>
+            <td class="text-danger">-2.93%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>126</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-08-14 09:20</td>
+            <td>15:10</td>
+            <td>24640</td>
+            <td>24630</td>
+            <td>24650</td>
+            <td>138.8</td>
+            <td>123.8</td>
+            <td>7.0</td>
+            <td>21.6</td>
+            <td>12.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,258</td>
+            <td class="text-danger">-0.63%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>127</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-08-13 09:20</td>
+            <td>15:10</td>
+            <td>24566</td>
+            <td>24615</td>
+            <td>24550</td>
+            <td>164.0</td>
+            <td>118.4</td>
+            <td>11.7</td>
+            <td>23.5</td>
+            <td>12.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,114</td>
+            <td class="text-danger">-2.06%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>128</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-08-08 09:20</td>
+            <td>12:50</td>
+            <td>24573</td>
+            <td>24470</td>
+            <td>24550</td>
+            <td>137.3</td>
+            <td>94.3</td>
+            <td>4.5</td>
+            <td>10.8</td>
+            <td>12.0%</td>
+            <td class="text-success font-weight-bold">Rs.+6,594</td>
+            <td class="text-success">+3.30%</td>
+            <td>210m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>129</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-08-07 09:20</td>
+            <td>14:05</td>
+            <td>24519</td>
+            <td>24414</td>
+            <td>24500</td>
+            <td>146.5</td>
+            <td>102.7</td>
+            <td>6.6</td>
+            <td>14.7</td>
+            <td>11.7%</td>
+            <td class="text-success font-weight-bold">Rs.+7,214</td>
+            <td class="text-success">+3.61%</td>
+            <td>285m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>130</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-08-06 09:20</td>
+            <td>15:10</td>
+            <td>24652</td>
+            <td>24576</td>
+            <td>24650</td>
+            <td>154.9</td>
+            <td>123.2</td>
+            <td>10.1</td>
+            <td>24.1</td>
+            <td>12.0%</td>
+            <td class="text-success font-weight-bold">Rs.+4,740</td>
+            <td class="text-success">+2.37%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>131</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-08-01 09:20</td>
+            <td>15:10</td>
+            <td>24726</td>
+            <td>24546</td>
+            <td>24750</td>
+            <td>112.9</td>
+            <td>116.8</td>
+            <td>2.9</td>
+            <td>14.5</td>
+            <td>12.0%</td>
+            <td class="text-success font-weight-bold">Rs.+16,552</td>
+            <td class="text-success">+8.28%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>132</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-07-31 09:20</td>
+            <td>15:10</td>
+            <td>24680</td>
+            <td>24762</td>
+            <td>24700</td>
+            <td>125.3</td>
+            <td>120.1</td>
+            <td>4.6</td>
+            <td>17.8</td>
+            <td>11.5%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,034</td>
+            <td class="text-danger">-3.02%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>133</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-07-30 09:20</td>
+            <td>15:10</td>
+            <td>24862</td>
+            <td>24858</td>
+            <td>24850</td>
+            <td>152.8</td>
+            <td>111.0</td>
+            <td>8.5</td>
+            <td>18.7</td>
+            <td>11.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,432</td>
+            <td class="text-danger">-0.72%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>134</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-07-25 09:20</td>
+            <td>15:10</td>
+            <td>24935</td>
+            <td>24844</td>
+            <td>24950</td>
+            <td>111.7</td>
+            <td>106.3</td>
+            <td>2.3</td>
+            <td>11.1</td>
+            <td>11.3%</td>
+            <td class="text-success font-weight-bold">Rs.+5,373</td>
+            <td class="text-success">+2.69%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>135</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-07-24 09:20</td>
+            <td>13:45</td>
+            <td>25204</td>
+            <td>25100</td>
+            <td>25200</td>
+            <td>131.6</td>
+            <td>102.2</td>
+            <td>4.3</td>
+            <td>12.5</td>
+            <td>10.7%</td>
+            <td class="text-success font-weight-bold">Rs.+7,338</td>
+            <td class="text-success">+3.67%</td>
+            <td>265m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>136</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-07-23 09:20</td>
+            <td>15:10</td>
+            <td>25133</td>
+            <td>25229</td>
+            <td>25150</td>
+            <td>130.7</td>
+            <td>118.0</td>
+            <td>5.3</td>
+            <td>17.9</td>
+            <td>10.5%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,952</td>
+            <td class="text-danger">-2.98%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>137</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-07-18 09:20</td>
+            <td>14:20</td>
+            <td>25087</td>
+            <td>24974</td>
+            <td>25100</td>
+            <td>114.7</td>
+            <td>106.9</td>
+            <td>2.6</td>
+            <td>11.7</td>
+            <td>11.4%</td>
+            <td class="text-success font-weight-bold">Rs.+7,715</td>
+            <td class="text-success">+3.86%</td>
+            <td>300m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>138</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-07-17 09:20</td>
+            <td>15:10</td>
+            <td>25217</td>
+            <td>25121</td>
+            <td>25200</td>
+            <td>144.1</td>
+            <td>102.1</td>
+            <td>6.1</td>
+            <td>14.2</td>
+            <td>11.2%</td>
+            <td class="text-success font-weight-bold">Rs.+6,008</td>
+            <td class="text-success">+3.00%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>139</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-07-16 09:20</td>
+            <td>15:10</td>
+            <td>25160</td>
+            <td>25208</td>
+            <td>25150</td>
+            <td>153.7</td>
+            <td>113.8</td>
+            <td>9.0</td>
+            <td>20.0</td>
+            <td>11.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,952</td>
+            <td class="text-danger">-1.98%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>140</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-07-11 09:20</td>
+            <td>12:40</td>
+            <td>25288</td>
+            <td>25185</td>
+            <td>25300</td>
+            <td>120.4</td>
+            <td>111.4</td>
+            <td>3.5</td>
+            <td>13.9</td>
+            <td>11.8%</td>
+            <td class="text-success font-weight-bold">Rs.+7,970</td>
+            <td class="text-success">+3.98%</td>
+            <td>200m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>141</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-07-10 09:20</td>
+            <td>15:10</td>
+            <td>25471</td>
+            <td>25363</td>
+            <td>25450</td>
+            <td>152.4</td>
+            <td>106.1</td>
+            <td>8.0</td>
+            <td>16.8</td>
+            <td>11.7%</td>
+            <td class="text-success font-weight-bold">Rs.+7,194</td>
+            <td class="text-success">+3.60%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>142</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-07-09 09:20</td>
+            <td>15:10</td>
+            <td>25489</td>
+            <td>25478</td>
+            <td>25500</td>
+            <td>152.9</td>
+            <td>133.5</td>
+            <td>10.7</td>
+            <td>28.5</td>
+            <td>11.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,498</td>
+            <td class="text-danger">-0.75%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>143</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-07-04 09:20</td>
+            <td>15:10</td>
+            <td>25412</td>
+            <td>25463</td>
+            <td>25400</td>
+            <td>138.3</td>
+            <td>105.6</td>
+            <td>5.5</td>
+            <td>14.6</td>
+            <td>12.3%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,267</td>
+            <td class="text-danger">-2.13%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>144</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-07-03 09:20</td>
+            <td>15:10</td>
+            <td>25523</td>
+            <td>25398</td>
+            <td>25500</td>
+            <td>161.7</td>
+            <td>113.2</td>
+            <td>10.6</td>
+            <td>21.0</td>
+            <td>12.4%</td>
+            <td class="text-success font-weight-bold">Rs.+9,256</td>
+            <td class="text-success">+4.63%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>145</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-07-02 09:20</td>
+            <td>13:25</td>
+            <td>25591</td>
+            <td>25405</td>
+            <td>25600</td>
+            <td>160.9</td>
+            <td>138.9</td>
+            <td>13.1</td>
+            <td>32.7</td>
+            <td>12.4%</td>
+            <td class="text-success font-weight-bold">Rs.+24,242</td>
+            <td class="text-success">+12.12%</td>
+            <td>245m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>146</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-06-27 09:20</td>
+            <td>15:10</td>
+            <td>25598</td>
+            <td>25633</td>
+            <td>25600</td>
+            <td>132.5</td>
+            <td>113.8</td>
+            <td>5.2</td>
+            <td>16.7</td>
+            <td>12.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,972</td>
+            <td class="text-danger">-1.99%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>147</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-06-26 09:20</td>
+            <td>15:10</td>
+            <td>25283</td>
+            <td>25542</td>
+            <td>25300</td>
+            <td>141.2</td>
+            <td>133.0</td>
+            <td>8.2</td>
+            <td>26.0</td>
+            <td>12.6%</td>
+            <td class="text-success font-weight-bold">Rs.+1,779</td>
+            <td class="text-success">+0.89%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>148</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-06-25 09:20</td>
+            <td>15:10</td>
+            <td>25162</td>
+            <td>25249</td>
+            <td>25150</td>
+            <td>175.1</td>
+            <td>133.0</td>
+            <td>16.2</td>
+            <td>32.3</td>
+            <td>13.0%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,027</td>
+            <td class="text-danger">-2.51%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>149</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-06-20 09:20</td>
+            <td>15:10</td>
+            <td>24861</td>
+            <td>25117</td>
+            <td>24850</td>
+            <td>148.0</td>
+            <td>116.5</td>
+            <td>8.1</td>
+            <td>20.2</td>
+            <td>13.7%</td>
+            <td class="text-success font-weight-bold">Rs.+4,735</td>
+            <td class="text-success">+2.37%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>150</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-06-19 09:20</td>
+            <td>15:10</td>
+            <td>24755</td>
+            <td>24792</td>
+            <td>24750</td>
+            <td>167.6</td>
+            <td>137.3</td>
+            <td>14.7</td>
+            <td>33.1</td>
+            <td>14.3%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,388</td>
+            <td class="text-danger">-2.69%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>151</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-06-18 09:20</td>
+            <td>15:10</td>
+            <td>24831</td>
+            <td>24813</td>
+            <td>24850</td>
+            <td>172.3</td>
+            <td>161.0</td>
+            <td>18.6</td>
+            <td>46.9</td>
+            <td>14.3%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,970</td>
+            <td class="text-danger">-0.99%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>152</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-06-13 09:20</td>
+            <td>15:10</td>
+            <td>24605</td>
+            <td>24726</td>
+            <td>24600</td>
+            <td>156.4</td>
+            <td>131.8</td>
+            <td>11.3</td>
+            <td>28.3</td>
+            <td>15.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,798</td>
+            <td class="text-danger">-3.40%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>153</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-06-12 09:20</td>
+            <td>11:20</td>
+            <td>25165</td>
+            <td>25077</td>
+            <td>25150</td>
+            <td>172.8</td>
+            <td>132.6</td>
+            <td>15.6</td>
+            <td>31.7</td>
+            <td>14.0%</td>
+            <td class="text-success font-weight-bold">Rs.+7,163</td>
+            <td class="text-success">+3.58%</td>
+            <td>120m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>154</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-06-11 09:20</td>
+            <td>15:10</td>
+            <td>25128</td>
+            <td>25145</td>
+            <td>25150</td>
+            <td>165.3</td>
+            <td>157.6</td>
+            <td>16.2</td>
+            <td>43.4</td>
+            <td>13.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,776</td>
+            <td class="text-danger">-2.39%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>155</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-06-06 09:20</td>
+            <td>15:10</td>
+            <td>24750</td>
+            <td>25002</td>
+            <td>24750</td>
+            <td>150.4</td>
+            <td>130.6</td>
+            <td>9.9</td>
+            <td>26.6</td>
+            <td>14.6%</td>
+            <td class="text-success font-weight-bold">Rs.+3,029</td>
+            <td class="text-success">+1.51%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>156</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-06-05 09:20</td>
+            <td>15:10</td>
+            <td>24626</td>
+            <td>24753</td>
+            <td>24650</td>
+            <td>160.1</td>
+            <td>159.8</td>
+            <td>15.0</td>
+            <td>43.4</td>
+            <td>15.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-9,086</td>
+            <td class="text-danger">-4.54%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>157</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-06-04 09:20</td>
+            <td>15:10</td>
+            <td>24571</td>
+            <td>24617</td>
+            <td>24550</td>
+            <td>208.1</td>
+            <td>157.5</td>
+            <td>30.5</td>
+            <td>52.2</td>
+            <td>15.8%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,917</td>
+            <td class="text-danger">-2.96%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>158</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-05-30 09:20</td>
+            <td>15:10</td>
+            <td>24806</td>
+            <td>24752</td>
+            <td>24800</td>
+            <td>167.8</td>
+            <td>142.0</td>
+            <td>15.2</td>
+            <td>35.5</td>
+            <td>16.1%</td>
+            <td class="text-success font-weight-bold">Rs.+594</td>
+            <td class="text-success">+0.30%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>159</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-05-29 09:20</td>
+            <td>12:55</td>
+            <td>24845</td>
+            <td>24769</td>
+            <td>24850</td>
+            <td>186.0</td>
+            <td>165.7</td>
+            <td>23.5</td>
+            <td>52.6</td>
+            <td>16.4%</td>
+            <td class="text-success font-weight-bold">Rs.+5,336</td>
+            <td class="text-success">+2.67%</td>
+            <td>215m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>160</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-05-28 09:20</td>
+            <td>15:10</td>
+            <td>24818</td>
+            <td>24748</td>
+            <td>24800</td>
+            <td>234.5</td>
+            <td>187.1</td>
+            <td>45.8</td>
+            <td>77.0</td>
+            <td>18.0%</td>
+            <td class="text-danger font-weight-bold">Rs.-690</td>
+            <td class="text-danger">-0.35%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>161</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-05-23 09:20</td>
+            <td>15:10</td>
+            <td>24626</td>
+            <td>24851</td>
+            <td>24650</td>
+            <td>163.3</td>
+            <td>166.7</td>
+            <td>16.5</td>
+            <td>48.0</td>
+            <td>17.3%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,751</td>
+            <td class="text-danger">-2.38%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>162</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-05-22 09:20</td>
+            <td>09:35</td>
+            <td>24645</td>
+            <td>24575</td>
+            <td>24650</td>
+            <td>193.1</td>
+            <td>173.6</td>
+            <td>27.0</td>
+            <td>59.0</td>
+            <td>17.3%</td>
+            <td class="text-success font-weight-bold">Rs.+7,223</td>
+            <td class="text-success">+3.61%</td>
+            <td>15m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>163</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-05-21 09:20</td>
+            <td>11:00</td>
+            <td>24724</td>
+            <td>24879</td>
+            <td>24700</td>
+            <td>231.4</td>
+            <td>178.2</td>
+            <td>43.0</td>
+            <td>70.3</td>
+            <td>17.6%</td>
+            <td class="text-success font-weight-bold">Rs.+3,653</td>
+            <td class="text-success">+1.83%</td>
+            <td>100m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>164</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-05-16 09:20</td>
+            <td>15:10</td>
+            <td>25004</td>
+            <td>25024</td>
+            <td>25000</td>
+            <td>172.5</td>
+            <td>148.7</td>
+            <td>17.3</td>
+            <td>40.0</td>
+            <td>16.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,270</td>
+            <td class="text-danger">-3.13%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>165</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-05-15 09:20</td>
+            <td>13:25</td>
+            <td>24620</td>
+            <td>24904</td>
+            <td>24600</td>
+            <td>202.2</td>
+            <td>157.5</td>
+            <td>28.2</td>
+            <td>51.0</td>
+            <td>16.9%</td>
+            <td class="text-success font-weight-bold">Rs.+21,287</td>
+            <td class="text-success">+10.64%</td>
+            <td>245m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>166</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-05-14 09:20</td>
+            <td>15:10</td>
+            <td>24664</td>
+            <td>24670</td>
+            <td>24650</td>
+            <td>222.1</td>
+            <td>178.5</td>
+            <td>39.1</td>
+            <td>68.5</td>
+            <td>17.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,954</td>
+            <td class="text-danger">-2.98%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>167</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-05-09 09:20</td>
+            <td>10:10</td>
+            <td>24114</td>
+            <td>24061</td>
+            <td>24100</td>
+            <td>219.0</td>
+            <td>185.9</td>
+            <td>38.8</td>
+            <td>72.7</td>
+            <td>21.6%</td>
+            <td class="text-success font-weight-bold">Rs.+3,328</td>
+            <td class="text-success">+1.66%</td>
+            <td>50m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>168</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-05-08 09:20</td>
+            <td>15:00</td>
+            <td>24398</td>
+            <td>24287</td>
+            <td>24400</td>
+            <td>232.4</td>
+            <td>209.4</td>
+            <td>47.9</td>
+            <td>92.3</td>
+            <td>21.0%</td>
+            <td class="text-success font-weight-bold">Rs.+5,528</td>
+            <td class="text-success">+2.76%</td>
+            <td>340m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>169</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-05-07 09:20</td>
+            <td>15:10</td>
+            <td>24366</td>
+            <td>24407</td>
+            <td>24350</td>
+            <td>241.5</td>
+            <td>196.1</td>
+            <td>50.3</td>
+            <td>84.8</td>
+            <td>19.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-7,974</td>
+            <td class="text-danger">-3.99%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>170</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-05-02 09:20</td>
+            <td>13:15</td>
+            <td>24410</td>
+            <td>24344</td>
+            <td>24400</td>
+            <td>188.2</td>
+            <td>158.0</td>
+            <td>23.4</td>
+            <td>48.5</td>
+            <td>18.3%</td>
+            <td class="text-success font-weight-bold">Rs.+2,365</td>
+            <td class="text-success">+1.18%</td>
+            <td>235m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>171</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-04-30 09:20</td>
+            <td>15:10</td>
+            <td>24320</td>
+            <td>24349</td>
+            <td>24300</td>
+            <td>233.7</td>
+            <td>184.2</td>
+            <td>45.0</td>
+            <td>74.8</td>
+            <td>18.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-7,131</td>
+            <td class="text-danger">-3.57%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>172</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-04-25 09:20</td>
+            <td>09:45</td>
+            <td>24327</td>
+            <td>24169</td>
+            <td>24350</td>
+            <td>160.4</td>
+            <td>163.2</td>
+            <td>15.4</td>
+            <td>45.4</td>
+            <td>17.2%</td>
+            <td class="text-success font-weight-bold">Rs.+24,507</td>
+            <td class="text-success">+12.25%</td>
+            <td>25m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>173</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-04-24 09:20</td>
+            <td>15:10</td>
+            <td>24272</td>
+            <td>24250</td>
+            <td>24250</td>
+            <td>194.2</td>
+            <td>147.3</td>
+            <td>24.0</td>
+            <td>43.5</td>
+            <td>16.2%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,214</td>
+            <td class="text-danger">-1.61%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>174</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-04-23 09:20</td>
+            <td>10:25</td>
+            <td>24313</td>
+            <td>24231</td>
+            <td>24300</td>
+            <td>203.9</td>
+            <td>162.0</td>
+            <td>29.5</td>
+            <td>54.1</td>
+            <td>16.0%</td>
+            <td class="text-success font-weight-bold">Rs.+6,814</td>
+            <td class="text-success">+3.41%</td>
+            <td>65m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>175</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-04-17 09:20</td>
+            <td>12:25</td>
+            <td>23358</td>
+            <td>23679</td>
+            <td>23350</td>
+            <td>171.6</td>
+            <td>140.5</td>
+            <td>16.2</td>
+            <td>35.4</td>
+            <td>15.5%</td>
+            <td class="text-success font-weight-bold">Rs.+25,729</td>
+            <td class="text-success">+12.86%</td>
+            <td>185m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>176</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-04-16 09:20</td>
+            <td>15:10</td>
+            <td>23285</td>
+            <td>23425</td>
+            <td>23300</td>
+            <td>180.3</td>
+            <td>167.1</td>
+            <td>21.9</td>
+            <td>52.1</td>
+            <td>15.9%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,876</td>
+            <td class="text-danger">-3.44%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>177</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-04-11 09:20</td>
+            <td>15:10</td>
+            <td>22766</td>
+            <td>22830</td>
+            <td>22750</td>
+            <td>195.2</td>
+            <td>160.6</td>
+            <td>26.2</td>
+            <td>51.3</td>
+            <td>20.1%</td>
+            <td class="text-danger font-weight-bold">Rs.-8,641</td>
+            <td class="text-danger">-4.32%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>178</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-04-09 09:20</td>
+            <td>15:10</td>
+            <td>22412</td>
+            <td>22403</td>
+            <td>22400</td>
+            <td>245.6</td>
+            <td>206.4</td>
+            <td>53.9</td>
+            <td>93.0</td>
+            <td>21.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,664</td>
+            <td class="text-danger">-3.33%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>179</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-04-04 09:20</td>
+            <td>11:00</td>
+            <td>23095</td>
+            <td>23004</td>
+            <td>23100</td>
+            <td>130.0</td>
+            <td>116.5</td>
+            <td>5.1</td>
+            <td>17.2</td>
+            <td>13.8%</td>
+            <td class="text-success font-weight-bold">Rs.+7,673</td>
+            <td class="text-success">+3.84%</td>
+            <td>100m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>180</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-04-03 09:20</td>
+            <td>15:10</td>
+            <td>23219</td>
+            <td>23253</td>
+            <td>23200</td>
+            <td>157.9</td>
+            <td>115.9</td>
+            <td>10.1</td>
+            <td>21.4</td>
+            <td>13.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-3,954</td>
+            <td class="text-danger">-1.98%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>181</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-04-02 09:20</td>
+            <td>15:10</td>
+            <td>23205</td>
+            <td>23338</td>
+            <td>23200</td>
+            <td>166.5</td>
+            <td>133.6</td>
+            <td>14.1</td>
+            <td>31.0</td>
+            <td>13.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,358</td>
+            <td class="text-danger">-2.18%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>182</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-03-28 09:20</td>
+            <td>13:05</td>
+            <td>23605</td>
+            <td>23498</td>
+            <td>23600</td>
+            <td>128.8</td>
+            <td>104.6</td>
+            <td>4.1</td>
+            <td>12.9</td>
+            <td>12.7%</td>
+            <td class="text-success font-weight-bold">Rs.+7,606</td>
+            <td class="text-success">+3.80%</td>
+            <td>225m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>183</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-03-27 09:20</td>
+            <td>15:10</td>
+            <td>23508</td>
+            <td>23589</td>
+            <td>23500</td>
+            <td>150.9</td>
+            <td>119.4</td>
+            <td>9.0</td>
+            <td>21.8</td>
+            <td>13.3%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,415</td>
+            <td class="text-danger">-2.71%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>184</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-03-26 09:20</td>
+            <td>12:30</td>
+            <td>23702</td>
+            <td>23618</td>
+            <td>23700</td>
+            <td>165.6</td>
+            <td>135.2</td>
+            <td>14.0</td>
+            <td>31.7</td>
+            <td>13.5%</td>
+            <td class="text-success font-weight-bold">Rs.+6,803</td>
+            <td class="text-success">+3.40%</td>
+            <td>190m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>185</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-03-21 09:20</td>
+            <td>15:10</td>
+            <td>23195</td>
+            <td>23349</td>
+            <td>23200</td>
+            <td>120.2</td>
+            <td>106.2</td>
+            <td>3.2</td>
+            <td>12.2</td>
+            <td>12.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-6,763</td>
+            <td class="text-danger">-3.38%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>186</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-03-20 09:20</td>
+            <td>15:10</td>
+            <td>23022</td>
+            <td>23184</td>
+            <td>23000</td>
+            <td>148.9</td>
+            <td>103.4</td>
+            <td>7.1</td>
+            <td>15.2</td>
+            <td>12.6%</td>
+            <td class="text-danger font-weight-bold">Rs.-2,699</td>
+            <td class="text-danger">-1.35%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>187</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-03-19 09:20</td>
+            <td>15:10</td>
+            <td>22877</td>
+            <td>22912</td>
+            <td>22900</td>
+            <td>145.4</td>
+            <td>140.6</td>
+            <td>9.7</td>
+            <td>30.3</td>
+            <td>13.3%</td>
+            <td class="text-danger font-weight-bold">Rs.-4,827</td>
+            <td class="text-danger">-2.41%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>188</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-03-13 09:20</td>
+            <td>15:10</td>
+            <td>22485</td>
+            <td>22400</td>
+            <td>22500</td>
+            <td>132.5</td>
+            <td>124.8</td>
+            <td>6.0</td>
+            <td>20.8</td>
+            <td>13.3%</td>
+            <td class="text-success font-weight-bold">Rs.+6,390</td>
+            <td class="text-success">+3.19%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>189</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-03-12 09:20</td>
+            <td>11:35</td>
+            <td>22533</td>
+            <td>22354</td>
+            <td>22550</td>
+            <td>150.1</td>
+            <td>139.9</td>
+            <td>10.7</td>
+            <td>30.9</td>
+            <td>13.7%</td>
+            <td class="text-success font-weight-bold">Rs.+24,510</td>
+            <td class="text-success">+12.25%</td>
+            <td>135m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>190</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-03-07 09:20</td>
+            <td>15:10</td>
+            <td>22560</td>
+            <td>22557</td>
+            <td>22550</td>
+            <td>132.6</td>
+            <td>103.9</td>
+            <td>4.6</td>
+            <td>13.2</td>
+            <td>13.5%</td>
+            <td class="text-danger font-weight-bold">Rs.-1,264</td>
+            <td class="text-danger">-0.63%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>191</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-03-06 09:20</td>
+            <td>09:45</td>
+            <td>22433</td>
+            <td>22253</td>
+            <td>22450</td>
+            <td>135.5</td>
+            <td>129.8</td>
+            <td>6.9</td>
+            <td>23.5</td>
+            <td>13.7%</td>
+            <td class="text-success font-weight-bold">Rs.+23,482</td>
+            <td class="text-success">+11.74%</td>
+            <td>25m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>192</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-03-05 09:20</td>
+            <td>15:10</td>
+            <td>22136</td>
+            <td>22335</td>
+            <td>22150</td>
+            <td>148.6</td>
+            <td>135.9</td>
+            <td>10.0</td>
+            <td>28.7</td>
+            <td>13.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-2,881</td>
+            <td class="text-danger">-1.44%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>193</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-02-28 09:20</td>
+            <td>12:55</td>
+            <td>22320</td>
+            <td>22110</td>
+            <td>22300</td>
+            <td>140.3</td>
+            <td>102.1</td>
+            <td>5.6</td>
+            <td>13.6</td>
+            <td>13.9%</td>
+            <td class="text-success font-weight-bold">Rs.+20,125</td>
+            <td class="text-success">+10.06%</td>
+            <td>215m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>194</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-02-27 09:20</td>
+            <td>15:10</td>
+            <td>22579</td>
+            <td>22543</td>
+            <td>22600</td>
+            <td>130.5</td>
+            <td>128.4</td>
+            <td>6.0</td>
+            <td>21.9</td>
+            <td>13.3%</td>
+            <td class="text-success font-weight-bold">Rs.+1,312</td>
+            <td class="text-success">+0.66%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>195</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-02-21 09:20</td>
+            <td>12:25</td>
+            <td>22907</td>
+            <td>22808</td>
+            <td>22900</td>
+            <td>142.0</td>
+            <td>116.7</td>
+            <td>7.0</td>
+            <td>19.2</td>
+            <td>14.5%</td>
+            <td class="text-success font-weight-bold">Rs.+7,936</td>
+            <td class="text-success">+3.97%</td>
+            <td>185m</td>
+            <td><span class="badge badge-accent">FLOOR_EXIT_4PCT</span></td>
+        </tr>
+        <tr>
+            <td>196</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-02-20 09:20</td>
+            <td>15:10</td>
+            <td>22857</td>
+            <td>22917</td>
+            <td>22850</td>
+            <td>160.0</td>
+            <td>129.8</td>
+            <td>12.0</td>
+            <td>28.0</td>
+            <td>14.7%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,622</td>
+            <td class="text-danger">-2.81%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>197</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-02-19 09:20</td>
+            <td>15:10</td>
+            <td>22858</td>
+            <td>22940</td>
+            <td>22850</td>
+            <td>184.0</td>
+            <td>148.2</td>
+            <td>20.9</td>
+            <td>42.0</td>
+            <td>15.4%</td>
+            <td class="text-danger font-weight-bold">Rs.-5,917</td>
+            <td class="text-danger">-2.96%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>198</td>
+            <td><span class="badge badge-fri">Fri</span></td>
+            <td>2025-02-14 09:20</td>
+            <td>10:40</td>
+            <td>23092</td>
+            <td>22924</td>
+            <td>23100</td>
+            <td>139.9</td>
+            <td>129.0</td>
+            <td>7.6</td>
+            <td>23.9</td>
+            <td>15.0%</td>
+            <td class="text-success font-weight-bold">Rs.+20,630</td>
+            <td class="text-success">+10.31%</td>
+            <td>80m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr>
+        <tr>
+            <td>199</td>
+            <td><span class="badge badge-thu">Thu</span></td>
+            <td>2025-02-13 09:20</td>
+            <td>15:10</td>
+            <td>23081</td>
+            <td>23030</td>
+            <td>23100</td>
+            <td>151.1</td>
+            <td>146.4</td>
+            <td>11.5</td>
+            <td>34.3</td>
+            <td>15.0%</td>
+            <td class="text-success font-weight-bold">Rs.+2,180</td>
+            <td class="text-success">+1.09%</td>
+            <td>350m</td>
+            <td><span class="badge badge-secondary">SQUAREOFF_3:10PM</span></td>
+        </tr>
+        <tr>
+            <td>200</td>
+            <td><span class="badge badge-wed">Wed</span></td>
+            <td>2025-02-12 09:20</td>
+            <td>09:45</td>
+            <td>23032</td>
+            <td>22859</td>
+            <td>23050</td>
+            <td>165.9</td>
+            <td>156.7</td>
+            <td>16.3</td>
+            <td>42.9</td>
+            <td>14.9%</td>
+            <td class="text-success font-weight-bold">Rs.+26,111</td>
+            <td class="text-success">+13.06%</td>
+            <td>25m</td>
+            <td><span class="badge badge-success">TARGET_10PCT</span></td>
+        </tr></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const equityCtx = document.getElementById('equityChart').getContext('2d');
+new Chart(equityCtx, {
+    type: 'line',
+    data: {
+        labels: ['2022-01-05 09:20', '2022-01-06 09:20', '2022-01-07 09:20', '2022-01-12 09:20', '2022-01-13 09:20', '2022-01-14 09:20', '2022-01-19 09:20', '2022-01-20 09:20', '2022-01-21 09:20', '2022-01-27 09:20', '2022-01-28 09:20', '2022-02-02 09:20', '2022-02-03 09:20', '2022-02-04 09:20', '2022-02-09 09:20', '2022-02-10 09:20', '2022-02-11 09:20', '2022-02-16 09:20', '2022-02-17 09:20', '2022-02-18 09:20', '2022-02-23 09:20', '2022-02-24 09:20', '2022-02-25 09:20', '2022-03-02 09:20', '2022-03-03 09:20', '2022-03-04 09:20', '2022-03-09 09:20', '2022-03-10 09:20', '2022-03-11 09:20', '2022-03-16 09:20', '2022-03-17 09:20', '2022-03-23 09:20', '2022-03-24 09:20', '2022-03-25 09:20', '2022-03-30 09:20', '2022-03-31 09:20', '2022-04-01 09:20', '2022-04-06 09:20', '2022-04-07 09:20', '2022-04-08 09:20', '2022-04-13 09:20', '2022-04-20 09:20', '2022-04-21 09:20', '2022-04-22 09:20', '2022-04-27 09:20', '2022-04-28 09:20', '2022-04-29 09:20', '2022-05-04 09:20', '2022-05-05 09:20', '2022-05-06 09:20', '2022-05-11 09:20', '2022-05-12 09:20', '2022-05-13 09:20', '2022-05-18 09:20', '2022-05-19 09:20', '2022-05-20 09:20', '2022-05-25 09:20', '2022-05-26 09:20', '2022-05-27 09:20', '2022-06-01 09:20', '2022-06-02 09:20', '2022-06-03 09:20', '2022-06-08 09:20', '2022-06-09 09:20', '2022-06-10 09:20', '2022-06-15 09:20', '2022-06-16 09:20', '2022-06-17 09:20', '2022-06-22 09:20', '2022-06-23 09:20', '2022-06-24 09:20', '2022-06-29 09:20', '2022-06-30 09:20', '2022-07-01 09:20', '2022-07-06 09:20', '2022-07-07 09:20', '2022-07-08 09:20', '2022-07-13 09:20', '2022-07-14 09:20', '2022-07-15 09:20', '2022-07-20 09:20', '2022-07-21 09:20', '2022-07-22 09:20', '2022-07-27 09:20', '2022-07-28 09:20', '2022-07-29 09:20', '2022-08-03 09:20', '2022-08-04 09:20', '2022-08-05 09:20', '2022-08-10 09:20', '2022-08-11 09:20', '2022-08-12 09:20', '2022-08-17 09:20', '2022-08-18 09:20', '2022-08-19 09:20', '2022-08-24 09:20', '2022-08-25 09:20', '2022-08-26 09:20', '2022-09-01 09:20', '2022-09-02 09:20', '2022-09-07 09:20', '2022-09-08 09:20', '2022-09-09 09:20', '2022-09-14 09:20', '2022-09-15 09:20', '2022-09-16 09:20', '2022-09-21 09:20', '2022-09-22 09:20', '2022-09-23 09:20', '2022-09-28 09:20', '2022-09-29 09:20', '2022-09-30 09:20', '2022-10-06 09:20', '2022-10-07 09:20', '2022-10-12 09:20', '2022-10-13 09:20', '2022-10-14 09:20', '2022-10-19 09:20', '2022-10-20 09:20', '2022-10-21 09:20', '2022-10-27 09:20', '2022-10-28 09:20', '2022-11-02 09:20', '2022-11-03 09:20', '2022-11-04 09:20', '2022-11-09 09:20', '2022-11-10 09:20', '2022-11-11 09:20', '2022-11-16 09:20', '2022-11-17 09:20', '2022-11-18 09:20', '2022-11-23 09:20', '2022-11-24 09:20', '2022-11-25 09:20', '2022-11-30 09:20', '2022-12-01 09:20', '2022-12-02 09:20', '2022-12-07 09:20', '2022-12-08 09:20', '2022-12-09 09:20', '2022-12-14 09:20', '2022-12-15 09:20', '2022-12-16 09:20', '2022-12-21 09:20', '2022-12-22 09:20', '2022-12-23 09:20', '2022-12-28 09:20', '2022-12-29 09:20', '2022-12-30 09:20', '2023-01-04 09:20', '2023-01-05 09:20', '2023-01-06 09:20', '2023-01-11 09:20', '2023-01-12 09:20', '2023-01-13 09:20', '2023-01-18 09:20', '2023-01-19 09:20', '2023-01-20 09:20', '2023-01-25 09:20', '2023-01-27 09:20', '2023-02-01 09:20', '2023-02-02 09:20', '2023-02-03 09:20', '2023-02-08 09:20', '2023-02-09 09:20', '2023-02-10 09:20', '2023-02-15 09:20', '2023-02-16 09:20', '2023-02-17 09:20', '2023-02-22 09:20', '2023-02-23 09:20', '2023-02-24 09:20', '2023-03-01 09:20', '2023-03-02 09:20', '2023-03-03 09:20', '2023-03-08 09:20', '2023-03-09 09:20', '2023-03-10 09:20', '2023-03-15 09:20', '2023-03-16 09:20', '2023-03-17 09:20', '2023-03-22 09:20', '2023-03-23 09:20', '2023-03-24 09:20', '2023-03-29 09:20', '2023-03-31 09:20', '2023-04-05 09:20', '2023-04-06 09:20', '2023-04-12 09:20', '2023-04-13 09:20', '2023-04-19 09:20', '2023-04-20 09:20', '2023-04-21 09:20', '2023-04-26 09:20', '2023-04-27 09:20', '2023-04-28 09:20', '2023-05-03 09:20', '2023-05-04 09:20', '2023-05-05 09:20', '2023-05-10 09:20', '2023-05-11 09:20', '2023-05-12 09:20', '2023-05-17 09:20', '2023-05-18 09:20', '2023-05-19 09:20', '2023-05-24 09:20', '2023-05-25 09:20', '2023-05-26 09:20', '2023-05-31 09:20', '2023-06-01 09:20', '2023-06-02 09:20', '2023-06-07 09:20', '2023-06-08 09:20', '2023-06-09 09:20', '2023-06-14 09:20', '2023-06-15 09:20', '2023-06-16 09:20', '2023-06-21 09:20', '2023-06-22 09:20', '2023-06-23 09:20', '2023-06-28 09:20', '2023-06-30 09:20', '2023-07-05 09:20', '2023-07-06 09:20', '2023-07-07 09:20', '2023-07-12 09:20', '2023-07-13 09:20', '2023-07-14 09:20', '2023-07-19 09:20', '2023-07-20 09:20', '2023-07-21 09:20', '2023-07-26 09:20', '2023-07-27 09:20', '2023-07-28 09:20', '2023-08-02 09:20', '2023-08-03 09:20', '2023-08-04 09:20', '2023-08-09 09:20', '2023-08-10 09:20', '2023-08-11 09:20', '2023-08-16 09:20', '2023-08-17 09:20', '2023-08-18 09:20', '2023-08-23 09:20', '2023-08-24 09:20', '2023-08-25 09:20', '2023-08-30 09:20', '2023-08-31 09:20', '2023-09-01 09:20', '2023-09-06 09:20', '2023-09-07 09:20', '2023-09-08 09:20', '2023-09-13 09:20', '2023-09-14 09:20', '2023-09-15 09:20', '2023-09-20 09:20', '2023-09-21 09:20', '2023-09-22 09:20', '2023-09-27 09:20', '2023-09-28 09:20', '2023-09-29 09:20', '2023-10-04 09:20', '2023-10-05 09:20', '2023-10-06 09:20', '2023-10-11 09:20', '2023-10-12 09:20', '2023-10-13 09:20', '2023-10-18 09:20', '2023-10-19 09:20', '2023-10-20 09:20', '2023-10-25 09:20', '2023-10-26 09:20', '2023-10-27 09:20', '2023-11-01 09:20', '2023-11-02 09:20', '2023-11-03 09:20', '2023-11-08 09:20', '2023-11-09 09:20', '2023-11-10 09:20', '2023-11-15 09:20', '2023-11-16 09:20', '2023-11-17 09:20', '2023-11-22 09:20', '2023-11-23 09:20', '2023-11-24 09:20', '2023-11-29 09:20', '2023-11-30 09:20', '2023-12-01 09:20', '2023-12-06 09:20', '2023-12-07 09:20', '2023-12-08 09:20', '2023-12-13 09:20', '2023-12-14 09:20', '2023-12-15 09:20', '2023-12-20 09:20', '2023-12-21 09:20', '2023-12-22 09:20', '2023-12-27 09:20', '2023-12-28 09:20', '2023-12-29 09:20', '2024-01-03 09:20', '2024-01-04 09:20', '2024-01-05 09:20', '2024-01-10 09:20', '2024-01-11 09:20', '2024-01-12 09:20', '2024-01-17 09:20', '2024-01-18 09:20', '2024-01-19 09:20', '2024-01-24 09:20', '2024-01-25 09:20', '2024-01-31 09:20', '2024-02-01 09:20', '2024-02-02 09:20', '2024-02-07 09:20', '2024-02-08 09:20', '2024-02-09 09:20', '2024-02-14 09:20', '2024-02-15 09:20', '2024-02-16 09:20', '2024-02-21 09:20', '2024-02-22 09:20', '2024-02-23 09:20', '2024-02-28 09:20', '2024-02-29 09:20', '2024-03-01 09:20', '2024-03-06 09:20', '2024-03-07 09:20', '2024-03-13 09:20', '2024-03-14 09:20', '2024-03-15 09:20', '2024-03-20 09:20', '2024-03-21 09:20', '2024-03-22 09:20', '2024-03-27 09:20', '2024-03-28 09:20', '2024-04-03 09:20', '2024-04-04 09:20', '2024-04-05 09:20', '2024-04-10 09:20', '2024-04-12 09:20', '2024-04-18 09:20', '2024-04-19 09:20', '2024-04-24 09:20', '2024-04-25 09:20', '2024-04-26 09:20', '2024-05-02 09:20', '2024-05-03 09:20', '2024-05-08 09:20', '2024-05-09 09:20', '2024-05-10 09:20', '2024-05-15 09:20', '2024-05-16 09:20', '2024-05-17 09:20', '2024-05-22 09:20', '2024-05-23 09:20', '2024-05-24 09:20', '2024-05-29 09:20', '2024-05-30 09:20', '2024-05-31 09:20', '2024-06-05 09:20', '2024-06-06 09:20', '2024-06-07 09:20', '2024-06-12 09:20', '2024-06-13 09:20', '2024-06-14 09:20', '2024-06-19 09:20', '2024-06-20 09:20', '2024-06-21 09:20', '2024-06-26 09:20', '2024-06-27 09:20', '2024-06-28 09:20', '2024-07-03 09:20', '2024-07-04 09:20', '2024-07-05 09:20', '2024-07-10 09:20', '2024-07-11 09:20', '2024-07-12 09:20', '2024-07-18 09:20', '2024-07-19 09:20', '2024-07-24 09:20', '2024-07-25 09:20', '2024-07-26 09:20', '2024-07-31 09:20', '2024-08-01 09:20', '2024-08-02 09:20', '2024-08-07 09:20', '2024-08-08 09:20', '2024-08-09 09:20', '2024-08-14 09:20', '2024-08-16 09:20', '2024-08-21 09:20', '2024-08-22 09:20', '2024-08-23 09:20', '2024-08-28 09:20', '2024-08-29 09:20', '2024-08-30 09:20', '2024-09-04 09:20', '2024-09-05 09:20', '2024-09-06 09:20', '2024-09-11 09:20', '2024-09-12 09:20', '2024-09-13 09:20', '2024-09-18 09:20', '2024-09-19 09:20', '2024-09-20 09:20', '2024-09-25 09:20', '2024-09-26 09:20', '2024-09-27 09:20', '2024-10-03 09:20', '2024-10-04 09:20', '2024-10-09 09:20', '2024-10-10 09:20', '2024-10-11 09:20', '2024-10-16 09:20', '2024-10-17 09:20', '2024-10-18 09:20', '2024-10-23 09:20', '2024-10-24 09:20', '2024-10-25 09:20', '2024-10-30 09:20', '2024-10-31 09:20', '2024-11-06 09:20', '2024-11-07 09:20', '2024-11-08 09:20', '2024-11-13 09:20', '2024-11-14 09:20', '2024-11-21 09:20', '2024-11-22 09:20', '2024-11-27 09:20', '2024-11-28 09:20', '2024-11-29 09:20', '2024-12-04 09:20', '2024-12-05 09:20', '2024-12-06 09:20', '2024-12-11 09:20', '2024-12-12 09:20', '2024-12-13 09:20', '2024-12-18 09:20', '2024-12-19 09:20', '2024-12-20 09:20', '2024-12-26 09:20', '2024-12-27 09:20', '2025-01-01 09:20', '2025-01-02 09:20', '2025-01-03 09:20', '2025-01-08 09:20', '2025-01-09 09:20', '2025-01-10 09:20', '2025-01-15 09:20', '2025-01-16 09:20', '2025-01-17 09:20', '2025-01-22 09:20', '2025-01-23 09:20', '2025-01-24 09:20', '2025-01-29 09:20', '2025-01-30 09:20', '2025-01-31 09:20', '2025-02-05 09:20', '2025-02-06 09:20', '2025-02-07 09:20', '2025-02-12 09:20', '2025-02-13 09:20', '2025-02-14 09:20', '2025-02-19 09:20', '2025-02-20 09:20', '2025-02-21 09:20', '2025-02-27 09:20', '2025-02-28 09:20', '2025-03-05 09:20', '2025-03-06 09:20', '2025-03-07 09:20', '2025-03-12 09:20', '2025-03-13 09:20', '2025-03-19 09:20', '2025-03-20 09:20', '2025-03-21 09:20', '2025-03-26 09:20', '2025-03-27 09:20', '2025-03-28 09:20', '2025-04-02 09:20', '2025-04-03 09:20', '2025-04-04 09:20', '2025-04-09 09:20', '2025-04-11 09:20', '2025-04-16 09:20', '2025-04-17 09:20', '2025-04-23 09:20', '2025-04-24 09:20', '2025-04-25 09:20', '2025-04-30 09:20', '2025-05-02 09:20', '2025-05-07 09:20', '2025-05-08 09:20', '2025-05-09 09:20', '2025-05-14 09:20', '2025-05-15 09:20', '2025-05-16 09:20', '2025-05-21 09:20', '2025-05-22 09:20', '2025-05-23 09:20', '2025-05-28 09:20', '2025-05-29 09:20', '2025-05-30 09:20', '2025-06-04 09:20', '2025-06-05 09:20', '2025-06-06 09:20', '2025-06-11 09:20', '2025-06-12 09:20', '2025-06-13 09:20', '2025-06-18 09:20', '2025-06-19 09:20', '2025-06-20 09:20', '2025-06-25 09:20', '2025-06-26 09:20', '2025-06-27 09:20', '2025-07-02 09:20', '2025-07-03 09:20', '2025-07-04 09:20', '2025-07-09 09:20', '2025-07-10 09:20', '2025-07-11 09:20', '2025-07-16 09:20', '2025-07-17 09:20', '2025-07-18 09:20', '2025-07-23 09:20', '2025-07-24 09:20', '2025-07-25 09:20', '2025-07-30 09:20', '2025-07-31 09:20', '2025-08-01 09:20', '2025-08-06 09:20', '2025-08-07 09:20', '2025-08-08 09:20', '2025-08-13 09:20', '2025-08-14 09:20', '2025-08-20 09:20', '2025-08-21 09:20', '2025-08-22 09:20', '2025-08-28 09:20', '2025-08-29 09:20', '2025-09-03 09:20', '2025-09-04 09:20', '2025-09-05 09:20', '2025-09-10 09:20', '2025-09-11 09:20', '2025-09-12 09:20', '2025-09-17 09:20', '2025-09-18 09:20', '2025-09-19 09:20', '2025-09-24 09:20', '2025-09-25 09:20', '2025-09-26 09:20', '2025-10-01 09:20', '2025-10-03 09:20', '2025-10-08 09:20', '2025-10-09 09:20', '2025-10-10 09:20', '2025-10-15 09:20', '2025-10-16 09:20', '2025-10-17 09:20', '2025-10-23 09:20', '2025-10-24 09:20', '2025-10-29 09:20', '2025-10-30 09:20', '2025-10-31 09:20', '2025-11-06 09:20', '2025-11-07 09:20', '2025-11-12 09:20', '2025-11-13 09:20', '2025-11-14 09:20', '2025-11-19 09:20', '2025-11-20 09:20', '2025-11-21 09:20', '2025-11-26 09:20', '2025-11-27 09:20', '2025-11-28 09:20', '2025-12-03 09:20', '2025-12-04 09:20', '2025-12-05 09:20', '2025-12-10 09:20', '2025-12-11 09:20', '2025-12-12 09:20', '2025-12-17 09:20', '2025-12-18 09:20', '2025-12-19 09:20', '2025-12-24 09:20', '2025-12-26 09:20', '2025-12-31 09:20', '2026-01-01 09:20', '2026-01-02 09:20', '2026-01-07 09:20', '2026-01-08 09:20', '2026-01-09 09:20', '2026-01-14 09:20', '2026-01-16 09:20', '2026-01-21 09:20', '2026-01-22 09:20', '2026-01-23 09:20', '2026-01-28 09:20', '2026-01-29 09:20', '2026-01-30 09:20', '2026-02-04 09:20', '2026-02-05 09:20', '2026-02-06 09:20', '2026-02-11 09:20', '2026-02-12 09:20', '2026-02-13 09:20', '2026-02-18 09:20', '2026-02-19 09:20', '2026-02-20 09:20', '2026-02-25 09:20', '2026-02-26 09:20', '2026-02-27 09:20', '2026-03-04 09:20', '2026-03-05 09:20', '2026-03-06 09:20', '2026-03-11 09:20', '2026-03-12 09:20', '2026-03-13 09:20', '2026-03-18 09:20', '2026-03-19 09:20', '2026-03-20 09:20', '2026-03-25 09:20', '2026-03-27 09:20', '2026-04-01 09:20', '2026-04-02 09:20', '2026-04-08 09:20', '2026-04-09 09:20', '2026-04-10 09:20', '2026-04-15 09:20', '2026-04-16 09:20', '2026-04-17 09:20', '2026-04-22 09:20', '2026-04-23 09:20', '2026-04-24 09:20', '2026-04-29 09:20', '2026-04-30 09:20', '2026-05-06 09:20', '2026-05-07 09:20', '2026-05-08 09:20', '2026-05-13 09:20', '2026-05-14 09:20', '2026-05-15 09:20', '2026-05-20 09:20', '2026-05-21 09:20', '2026-05-22 09:20', '2026-05-27 09:20', '2026-05-29 09:20', '2026-06-03 09:20', '2026-06-04 09:20', '2026-06-05 09:20', '2026-06-10 09:20', '2026-06-11 09:20', '2026-06-12 09:20', '2026-06-17 09:20', '2026-06-18 09:20', '2026-06-19 09:20', '2026-06-24 09:20', '2026-06-25 09:20', '2026-07-01 09:20'],
+        datasets: [{
+            label: 'Cumulative PnL (Rs.)',
+            data: [-3762.0, -5598.0, -5931.0, -10698.0, -14795.0, -21987.0, -15283.0, -7855.0, -12296.0, -9099.0, -2019.0, -7638.0, -1508.0, -5453.0, -11876.0, -17892.0, -9981.0, -3746.0, 3166.0, -1573.0, 12568.0, 37304.0, 29100.0, 21976.0, 42247.0, 48193.0, 55087.0, 76505.0, 66939.0, 58394.0, 51972.0, 74222.0, 66461.0, 71789.0, 65381.0, 69053.0, 62066.0, 63322.0, 72726.0, 66902.0, 74397.0, 69294.0, 63256.0, 64008.0, 69169.0, 64343.0, 88325.0, 113212.0, 120238.0, 117709.0, 145868.0, 152822.0, 175425.0, 182931.0, 190781.0, 192253.0, 214520.0, 235280.0, 228309.0, 251123.0, 248414.0, 270555.0, 271672.0, 266458.0, 274150.0, 272441.0, 299669.0, 298257.0, 305803.0, 300783.0, 298349.0, 291715.0, 295372.0, 303295.0, 299116.0, 296205.0, 293727.0, 308381.0, 315428.0, 313020.0, 311676.0, 306718.0, 303264.0, 298652.0, 291114.0, 286776.0, 294313.0, 322280.0, 319598.0, 314874.0, 315625.0, 310896.0, 304465.0, 300244.0, 320700.0, 316254.0, 333574.0, 340056.0, 336694.0, 337121.0, 331347.0, 324858.0, 327870.0, 323369.0, 346288.0, 353482.0, 359625.0, 357114.0, 364810.0, 358186.0, 379405.0, 402351.0, 402555.0, 400822.0, 395879.0, 403461.0, 413300.0, 415093.0, 409106.0, 412153.0, 411878.0, 411043.0, 413280.0, 410326.0, 407104.0, 412550.0, 413831.0, 409671.0, 405757.0, 409114.0, 409812.0, 410698.0, 404356.0, 401475.0, 395361.0, 398136.0, 400874.0, 406919.0, 403197.0, 410836.0, 409351.0, 430122.0, 434544.0, 442420.0, 450125.0, 457667.0, 454176.0, 446890.0, 453341.0, 460181.0, 467592.0, 475555.0, 473511.0, 481376.0, 474979.0, 470855.0, 470968.0, 473573.0, 481487.0, 489337.0, 526317.0, 522206.0, 515021.0, 509972.0, 507132.0, 506607.0, 500708.0, 503570.0, 504460.0, 524664.0, 526898.0, 531630.0, 528030.0, 532573.0, 524874.0, 519737.0, 528394.0, 527929.0, 551076.0, 546599.0, 545701.0, 547508.0, 547295.0, 554169.0, 549137.0, 543236.0, 538439.0, 534929.0, 530166.0, 528051.0, 528225.0, 529029.0, 529701.0, 526379.0, 520535.0, 513812.0, 512415.0, 504198.0, 506708.0, 505747.0, 506588.0, 503816.0, 511293.0, 518091.0, 515704.0, 515794.0, 513718.0, 505018.0, 507034.0, 509786.0, 511219.0, 507147.0, 511086.0, 513088.0, 511208.0, 512791.0, 509562.0, 506887.0, 510025.0, 511288.0, 506222.0, 498534.0, 496025.0, 490750.0, 493701.0, 499077.0, 501425.0, 498432.0, 495536.0, 488242.0, 491249.0, 488151.0, 494232.0, 494124.0, 500313.0, 504048.0, 502749.0, 497895.0, 499024.0, 501190.0, 496322.0, 500569.0, 500203.0, 498506.0, 505308.0, 505826.0, 509985.0, 514780.0, 507253.0, 505698.0, 498902.0, 496592.0, 491631.0, 492764.0, 491718.0, 497851.0, 500977.0, 501765.0, 496872.0, 517167.0, 515667.0, 513207.0, 513028.0, 510844.0, 509464.0, 510394.0, 508815.0, 515109.0, 511062.0, 512014.0, 523391.0, 529893.0, 525429.0, 530790.0, 531674.0, 532584.0, 530514.0, 531418.0, 528177.0, 524781.0, 519873.0, 519819.0, 518651.0, 520331.0, 521482.0, 514650.0, 512714.0, 510150.0, 507788.0, 504984.0, 502886.0, 499440.0, 495511.0, 490381.0, 518722.0, 515814.0, 511140.0, 509630.0, 504725.0, 502818.0, 509820.0, 505631.0, 506442.0, 502080.0, 505950.0, 498681.0, 518904.0, 520265.0, 520618.0, 528428.0, 536344.0, 538686.0, 538832.0, 541474.0, 561500.0, 582789.0, 575032.0, 575965.0, 571876.0, 567627.0, 589704.0, 597201.0, 598415.0, 621115.0, 614203.0, 614053.0, 611710.0, 609782.0, 614887.0, 610313.0, 617978.0, 638761.0, 636081.0, 630598.0, 627032.0, 621492.0, 617932.0, 646149.0, 643300.0, 639431.0, 650385.0, 658223.0, 664607.0, 664135.0, 657520.0, 665481.0, 664067.0, 685219.0, 679812.0, 700968.0, 694094.0, 692447.0, 699822.0, 689972.0, 680117.0, 701649.0, 694009.0, 691966.0, 699927.0, 698146.0, 698826.0, 693189.0, 700169.0, 697047.0, 697900.0, 693926.0, 714359.0, 709106.0, 715115.0, 714369.0, 711976.0, 721100.0, 714465.0, 715894.0, 709715.0, 730540.0, 737832.0, 731764.0, 739150.0, 746517.0, 753605.0, 747262.0, 770451.0, 764814.0, 765001.0, 769775.0, 762995.0, 768767.0, 763439.0, 760284.0, 766683.0, 760812.0, 759715.0, 756206.0, 752111.0, 743962.0, 741271.0, 735188.0, 741583.0, 765903.0, 771052.0, 792604.0, 789959.0, 787536.0, 795412.0, 799498.0, 791841.0, 785895.0, 786010.0, 807168.0, 811708.0, 816490.0, 818237.0, 815393.0, 816165.0, 837314.0, 837333.0, 838032.0, 838499.0, 858700.0, 856424.0, 864164.0, 871116.0, 894548.0, 887560.0, 893776.0, 900979.0, 898040.0, 920272.0, 913632.0, 935270.0, 931574.0, 928983.0, 935699.0, 933129.0, 928593.0, 936170.0, 958999.0, 964788.0, 960308.0, 958167.0, 965485.0, 964613.0, 959732.0, 982403.0, 989643.0, 1010252.0, 1016156.0, 1023990.0, 1021326.0, 1020149.0, 1015288.0, 1021738.0, 1014868.0, 1020787.0, 1012091.0, 1004838.0, 1003554.0, 1006374.0, 1013708.0, 1021252.0, 1047363.0, 1049543.0, 1070173.0, 1064256.0, 1058634.0, 1066570.0, 1067883.0, 1088007.0, 1085126.0, 1108608.0, 1107343.0, 1131853.0, 1138243.0, 1133416.0, 1130717.0, 1123954.0, 1130757.0, 1125342.0, 1132948.0, 1128590.0, 1124635.0, 1132309.0, 1125644.0, 1117003.0, 1110127.0, 1135856.0, 1142670.0, 1139456.0, 1163963.0, 1156832.0, 1159198.0, 1151224.0, 1156752.0, 1160079.0, 1154126.0, 1175413.0, 1169143.0, 1172796.0, 1180019.0, 1175268.0, 1174578.0, 1179914.0, 1180508.0, 1174591.0, 1165505.0, 1168534.0, 1163758.0, 1170922.0, 1164124.0, 1162154.0, 1156766.0, 1161500.0, 1156473.0, 1158252.0, 1154280.0, 1178522.0, 1187779.0, 1183511.0, 1182013.0, 1189207.0, 1197177.0, 1193225.0, 1199233.0, 1206948.0, 1200996.0, 1208335.0, 1213708.0, 1212275.0, 1206242.0, 1222794.0, 1227534.0, 1234747.0, 1241341.0, 1237227.0, 1235969.0, 1230115.0, 1228283.0, 1238381.0, 1243701.0, 1249757.0, 1245753.0, 1253358.0, 1260272.0, 1258155.0, 1257399.0, 1254079.0, 1251062.0, 1249724.0, 1252432.0, 1253561.0, 1267711.0, 1279475.0, 1279614.0, 1274136.0, 1280321.0, 1275022.0, 1271598.0, 1266321.0, 1262028.0, 1255959.0, 1268140.0, 1270414.0, 1264181.0, 1272177.0, 1283754.0, 1291255.0, 1286405.0, 1281358.0, 1276836.0, 1271215.0, 1273031.0, 1267001.0, 1270747.0, 1281436.0, 1282321.0, 1284169.0, 1292096.0, 1286810.0, 1280294.0, 1288074.0, 1282743.0, 1279682.0, 1282237.0, 1279102.0, 1276647.0, 1278854.0, 1281691.0, 1277244.0, 1278073.0, 1270773.0, 1267987.0, 1289922.0, 1310558.0, 1311285.0, 1313528.0, 1335315.0, 1341697.0, 1364058.0, 1370563.0, 1377741.0, 1372090.0, 1367235.0, 1372427.0, 1366542.0, 1366856.0, 1368772.0, 1378690.0, 1372566.0, 1393646.0, 1386804.0, 1394624.0, 1400953.0, 1408652.0, 1397813.0, 1388676.0, 1403895.0, 1427664.0, 1434606.0, 1440541.0, 1433522.0, 1455238.0, 1459886.0, 1465717.0, 1473296.0, 1480459.0, 1516269.0, 1507448.0, 1528624.0, 1520453.0, 1514368.0, 1520727.0, 1514831.0, 1522618.0, 1520092.0, 1540280.0, 1531710.0, 1537412.0, 1543365.0, 1539404.0, 1537611.0, 1539952.0, 1546617.0, 1547633.0, 1551365.0, 1558138.0, 1551027.0, 1549679.0, 1573095.0, 1579969.0, 1572496.0, 1580424.0, 1594503.0, 1588817.0, 1594455.0, 1587350.0, 1580678.0, 1575845.0, 1572148.0, 1577683.0, 1575084.0],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.06)',
+            fill: true,
+            tension: 0.2,
+            pointRadius: 0,
+            borderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { labels: { color: '#f3f4f6', font: { family: 'Inter' } } }
+        },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#9ca3af', maxTicksLimit: 12, font: { family: 'Inter', size: 10 } } },
+            y: {
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: '#10b981', font: { family: 'Inter' }, callback: v => 'Rs.' + v.toLocaleString('en-IN') }
+            }
+        }
+    }
+});
+
+const reasonCtx = document.getElementById('reasonChart').getContext('2d');
+new Chart(reasonCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['SQUAREOFF_3:10PM', 'FLOOR_EXIT_4PCT', 'TARGET_10PCT', 'OPEN_AT_END'],
+        datasets: [{
+            data: [467, 125, 68, 1],
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+            borderWidth: 2,
+            borderColor: '#0b0f19',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: '#f3f4f6', font: { family: 'Inter', size: 11 }, padding: 14 }
+            }
+        }
+    }
+});
+
+const monthCtx = document.getElementById('monthlyChart').getContext('2d');
+new Chart(monthCtx, {
+    type: 'bar',
+    data: {
+        labels: ['2022-01', '2022-02', '2022-03', '2022-04', '2022-05', '2022-06', '2022-07', '2022-08', '2022-09', '2022-10', '2022-11', '2022-12', '2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06', '2023-07', '2023-08', '2023-09', '2023-10', '2023-11', '2023-12', '2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06', '2024-07', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07'],
+        datasets: [{
+            label: 'Monthly PnL (Rs.)',
+            data: [-2019.0, 31119.0, 39954.0, 19272.0, 139984.0, 67062.0, -8595.0, 53280.0, 62295.0, 8692.0, -15682.0, 57980.0, 35995.0, 42293.0, 11605.0, -29424.0, -6778.0, -8499.0, -4410.0, 20656.0, 888.0, 9762.0, -12715.0, -9895.0, 35867.0, 75517.0, 7290.0, 43988.0, 32665.0, 22954.0, 43714.0, -23543.0, 44739.0, 78154.0, 67410.0, 33039.0, 38941.0, 84453.0, 44941.0, 23884.0, 23676.0, -26227.0, 51961.0, 43515.0, 29718.0, 4279.0, 415.0, -6925.0, 94846.0, 36562.0, 64644.0, 64116.0, 35683.0, 4588.0, -2599.0],
+            backgroundColor: ['rgba(239,68,68,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)', 'rgba(239,68,68,0.7)', 'rgba(239,68,68,0.7)', 'rgba(239,68,68,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)', 'rgba(239,68,68,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(16,185,129,0.7)', 'rgba(239,68,68,0.7)'],
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { labels: { color: '#f3f4f6', font: { family: 'Inter' } } }
+        },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#9ca3af', maxTicksLimit: 30, font: { family: 'Inter', size: 9 }, maxRotation: 70 } },
+            y: {
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: '#9ca3af', font: { family: 'Inter' }, callback: v => 'Rs.' + v.toLocaleString('en-IN') }
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>

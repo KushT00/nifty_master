@@ -1,0 +1,24 @@
+{
+  "date": "2026-07-01",
+  "bullTrend": true,
+  "bearTrend": false,
+  "longPullbackReady": true,
+  "shortPullbackReady": false,
+  "lastSignal": 1,
+  "oppositeSeen": false,
+  "position": {
+    "active": true,
+    "symbol": "HISTORICAL_CE",
+    "option_type": "CE",
+    "direction": "LONG",
+    "entry_type": "SMART_REENTRY",
+    "entry_spot": 24005.75,
+    "entry_option_price": 200.0,
+    "entry_time": "2026-07-01T10:15:00",
+    "trail_high": 24005.95,
+    "trail_low": 0.0,
+    "stop_loss": 23825.706875,
+    "trail_active": false,
+    "lot_size": 65
+  }
+}

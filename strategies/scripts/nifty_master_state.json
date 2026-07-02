@@ -1,0 +1,454 @@
+{
+  "current_week": "2026-26",
+  "weekly_pnl": 0.0,
+  "week_blocked": false,
+  "wednesday_close": 23987.5,
+  "monday_close": 0.0,
+  "morning_pcr": 0.8341764693249722,
+  "morning_pcr_date": "2026-07-02",
+  "morning_spot": 24062.2,
+  "weekly_limit": 4000.0,
+  "adjustment_signals": [],
+  "market_data": {
+    "vix": 12.5,
+    "ivr": 17.56,
+    "adx": 17.72,
+    "pcr": 1.012241682863206,
+    "nifty_ltp": 24139.6
+  },
+  "carry_trade": {
+    "active": false,
+    "legs": [],
+    "premium_collected": 0.0,
+    "strike": 0,
+    "type": "",
+    "entry_time": "",
+    "intraday_only": false,
+    "greeks": {
+      "delta": 0,
+      "theta": 0,
+      "vega": 0
+    },
+    "live_pnl": 0
+  },
+  "monday_trade": {
+    "active": false,
+    "legs": [],
+    "premium_collected": 0.0,
+    "strike": 0,
+    "type": "",
+    "entry_time": "",
+    "intraday_only": false,
+    "greeks": {
+      "delta": 0,
+      "theta": 0,
+      "vega": 0
+    },
+    "live_pnl": 0
+  },
+  "tuesday_trade": {
+    "active": false,
+    "legs": [],
+    "premium_collected": 0.0,
+    "strike": 0,
+    "type": "",
+    "entry_time": "",
+    "intraday_only": false,
+    "greeks": {
+      "delta": 0,
+      "theta": 0,
+      "vega": 0
+    },
+    "live_pnl": 0
+  },
+  "last_eval": "14:05:32",
+  "vix_min": 9.1,
+  "vix_max": 28.46,
+  "vix_history_date": "2026-07-02",
+  "oi_data": [
+    {
+      "strike": 23550.0,
+      "ce_oi": 26325,
+      "pe_oi": 1991990,
+      "total_oi": 2018315
+    },
+    {
+      "strike": 23600.0,
+      "ce_oi": 183690,
+      "pe_oi": 5040490,
+      "total_oi": 5224180
+    },
+    {
+      "strike": 23650.0,
+      "ce_oi": 53690,
+      "pe_oi": 2128100,
+      "total_oi": 2181790
+    },
+    {
+      "strike": 23700.0,
+      "ce_oi": 347295,
+      "pe_oi": 4341350,
+      "total_oi": 4688645
+    },
+    {
+      "strike": 23750.0,
+      "ce_oi": 136370,
+      "pe_oi": 2293980,
+      "total_oi": 2430350
+    },
+    {
+      "strike": 23800.0,
+      "ce_oi": 1041495,
+      "pe_oi": 6721520,
+      "total_oi": 7763015
+    },
+    {
+      "strike": 23850.0,
+      "ce_oi": 310570,
+      "pe_oi": 3160560,
+      "total_oi": 3471130
+    },
+    {
+      "strike": 23900.0,
+      "ce_oi": 2268630,
+      "pe_oi": 9435530,
+      "total_oi": 11704160
+    },
+    {
+      "strike": 23950.0,
+      "ce_oi": 1168700,
+      "pe_oi": 4698655,
+      "total_oi": 5867355
+    },
+    {
+      "strike": 24000.0,
+      "ce_oi": 7488585,
+      "pe_oi": 14339390,
+      "total_oi": 21827975
+    },
+    {
+      "strike": 24050.0,
+      "ce_oi": 4164810,
+      "pe_oi": 7799350,
+      "total_oi": 11964160
+    },
+    {
+      "strike": 24100.0,
+      "ce_oi": 8744450,
+      "pe_oi": 13074165,
+      "total_oi": 21818615
+    },
+    {
+      "strike": 24150.0,
+      "ce_oi": 5704725,
+      "pe_oi": 5039515,
+      "total_oi": 10744240
+    },
+    {
+      "strike": 24200.0,
+      "ce_oi": 9356815,
+      "pe_oi": 4082975,
+      "total_oi": 13439790
+    },
+    {
+      "strike": 24250.0,
+      "ce_oi": 2973100,
+      "pe_oi": 819975,
+      "total_oi": 3793075
+    },
+    {
+      "strike": 24300.0,
+      "ce_oi": 5923190,
+      "pe_oi": 1621685,
+      "total_oi": 7544875
+    },
+    {
+      "strike": 24350.0,
+      "ce_oi": 2341560,
+      "pe_oi": 249405,
+      "total_oi": 2590965
+    },
+    {
+      "strike": 24400.0,
+      "ce_oi": 5479500,
+      "pe_oi": 360360,
+      "total_oi": 5839860
+    },
+    {
+      "strike": 24450.0,
+      "ce_oi": 2206100,
+      "pe_oi": 84305,
+      "total_oi": 2290405
+    },
+    {
+      "strike": 24500.0,
+      "ce_oi": 9177090,
+      "pe_oi": 959400,
+      "total_oi": 10136490
+    },
+    {
+      "strike": 24550.0,
+      "ce_oi": 2229175,
+      "pe_oi": 32955,
+      "total_oi": 2262130
+    },
+    {
+      "strike": 24600.0,
+      "ce_oi": 7045545,
+      "pe_oi": 127465,
+      "total_oi": 7173010
+    },
+    {
+      "strike": 24650.0,
+      "ce_oi": 1761955,
+      "pe_oi": 10205,
+      "total_oi": 1772160
+    },
+    {
+      "strike": 24700.0,
+      "ce_oi": 4782245,
+      "pe_oi": 38675,
+      "total_oi": 4820920
+    },
+    {
+      "strike": 24750.0,
+      "ce_oi": 2471885,
+      "pe_oi": 5265,
+      "total_oi": 2477150
+    }
+  ],
+  "key_levels": {
+    "max_pain": 24100.0,
+    "ce_wall": 24200.0,
+    "ce_wall_oi": 9356815,
+    "pe_wall": 24000.0,
+    "pe_wall_oi": 14339390
+  },
+  "decision_log": [
+    {
+      "time": "09:24",
+      "day": "Tue",
+      "slot": "tuesday_trade",
+      "action": "SKIPPED",
+      "reason": "VIX 13.9 out of safe range (14.0-22.0)",
+      "gates": {
+        "vix_gate": {
+          "passed": false,
+          "value": 13.9,
+          "threshold": "14.0-22.0"
+        },
+        "gap_gate": {
+          "passed": true,
+          "value": 0.0,
+          "threshold": "<=1.0%"
+        }
+      }
+    },
+    {
+      "time": "09:28",
+      "day": "Tue",
+      "slot": "tuesday_trade",
+      "action": "DEPLOYED",
+      "reason": "Smart IC deployed | Prem=Rs.1511",
+      "gates": {
+        "vix_gate": {
+          "passed": true,
+          "value": 13.9,
+          "threshold": "13.5-22.0"
+        },
+        "gap_gate": {
+          "passed": true,
+          "value": 0.0,
+          "threshold": "<=1.0%"
+        }
+      }
+    },
+    {
+      "time": "15:30",
+      "day": "Tue",
+      "slot": "tuesday_trade",
+      "action": "SYNC_CLEAR",
+      "reason": "Manual square-off detected at broker: missing legs ['NIFTY30JUN2623900PE', 'NIFTY30JUN2623800PE']",
+      "gates": {}
+    },
+    {
+      "time": "15:15",
+      "day": "Wed",
+      "slot": "carry_trade",
+      "action": "SKIPPED",
+      "reason": "Ranging but IVR too low (<30)",
+      "gates": {
+        "vix_gate": {
+          "passed": true,
+          "value": 13.2,
+          "threshold": ">=13"
+        },
+        "ivr": {
+          "value": 21.0
+        },
+        "adx": {
+          "value": 11.5
+        },
+        "pcr": {
+          "value": 1.1
+        },
+        "pcr_shift": {
+          "value": 0.14
+        },
+        "spot_shift": {
+          "value": 104.0
+        }
+      }
+    },
+    {
+      "time": "15:20",
+      "day": "Wed",
+      "slot": "carry_trade",
+      "action": "SKIPPED",
+      "reason": "Ranging but IVR too low (<30)",
+      "gates": {
+        "vix_gate": {
+          "passed": true,
+          "value": 13.3,
+          "threshold": ">=13"
+        },
+        "ivr": {
+          "value": 21.0
+        },
+        "adx": {
+          "value": 11.5
+        },
+        "pcr": {
+          "value": 1.1
+        },
+        "pcr_shift": {
+          "value": 0.14
+        },
+        "spot_shift": {
+          "value": 98.0
+        }
+      }
+    },
+    {
+      "time": "15:25",
+      "day": "Wed",
+      "slot": "carry_trade",
+      "action": "SKIPPED",
+      "reason": "Ranging but IVR too low (<30)",
+      "gates": {
+        "vix_gate": {
+          "passed": true,
+          "value": 13.2,
+          "threshold": ">=13"
+        },
+        "ivr": {
+          "value": 21.0
+        },
+        "adx": {
+          "value": 11.5
+        },
+        "pcr": {
+          "value": 1.07
+        },
+        "pcr_shift": {
+          "value": 0.11
+        },
+        "spot_shift": {
+          "value": 97.0
+        }
+      }
+    },
+    {
+      "time": "11:56",
+      "day": "Thu",
+      "slot": "carry_trade",
+      "action": "SKIPPED",
+      "reason": "VIX 12.7 < 13 \u2014 no premium edge",
+      "gates": {
+        "vix_gate": {
+          "passed": false,
+          "value": 12.7,
+          "threshold": ">=13"
+        },
+        "ivr": {
+          "value": 19.0
+        },
+        "adx": {
+          "value": 14.9
+        },
+        "pcr": {
+          "value": 0.83
+        }
+      }
+    },
+    {
+      "time": "12:02",
+      "day": "Thu",
+      "slot": "carry_trade",
+      "action": "SKIPPED",
+      "reason": "VIX 12.7 < 13 \u2014 no premium edge",
+      "gates": {
+        "vix_gate": {
+          "passed": false,
+          "value": 12.7,
+          "threshold": ">=13"
+        },
+        "ivr": {
+          "value": 19.0
+        },
+        "adx": {
+          "value": 14.9
+        },
+        "pcr": {
+          "value": 0.86
+        }
+      }
+    },
+    {
+      "time": "14:00",
+      "day": "Thu",
+      "slot": "carry_trade",
+      "action": "SKIPPED",
+      "reason": "VIX 12.5 < 13 \u2014 no premium edge",
+      "gates": {
+        "vix_gate": {
+          "passed": false,
+          "value": 12.5,
+          "threshold": ">=13"
+        },
+        "ivr": {
+          "value": 18.0
+        },
+        "adx": {
+          "value": 17.7
+        },
+        "pcr": {
+          "value": 1.01
+        }
+      }
+    },
+    {
+      "time": "14:05",
+      "day": "Thu",
+      "slot": "carry_trade",
+      "action": "SKIPPED",
+      "reason": "VIX 12.5 < 13 \u2014 no premium edge",
+      "gates": {
+        "vix_gate": {
+          "passed": false,
+          "value": 12.5,
+          "threshold": ">=13"
+        },
+        "ivr": {
+          "value": 18.0
+        },
+        "adx": {
+          "value": 17.7
+        },
+        "pcr": {
+          "value": 1.01
+        }
+      }
+    }
+  ]
+}
