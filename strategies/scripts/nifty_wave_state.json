@@ -1,0 +1,27 @@
+{
+  "initial_position": 0,
+  "current_position": 0,
+  "last_price": 0.0,
+  "portfolio_delta": 1235.0,
+  "last_eval": "2026-08-03 15:41:09",
+  "ce_sells": 2,
+  "pe_sells": 19,
+  "ce_reference": 24718.8,
+  "pe_reference": 24764.3,
+  "open_positions": {
+    "NIFTY04AUG2624700CE": {
+      "qty": 65,
+      "entry_price": 19.55,
+      "entry_time": "2026-08-03T14:37:40.543722",
+      "opt_type": "CE",
+      "strike": 24700
+    },
+    "NIFTY04AUG2624800CE": {
+      "qty": 65,
+      "entry_price": 9.45,
+      "entry_time": "2026-08-03T15:41:06.710141",
+      "opt_type": "CE",
+      "strike": 24800
+    }
+  }
+}
